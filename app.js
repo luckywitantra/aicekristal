@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbz_GANTI_DENGAN_DEPLOY_ID_ANDA/exec"; // <-- GANTI DENGAN URL API APPS SCRIPT ANDA
+const API_URL = "https://script.google.com/macros/s/AKfycbxkW8fIM27avrLKbWuaFxBhvDRs07VbQ0HaB6-fnt9wDCC70WynBCwtC6dFxeGvFkQR3A/exec"; // <-- GANTI DENGAN URL API APPS SCRIPT ANDA
 
 /* ========================================== */
 /* 1. MESIN VIRTUAL KEYBOARD (ENTERPRISE OSK) */
