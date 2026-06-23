@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aice Kristal Super App</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <meta name="theme-color" content="#121212">
+</head>
+<body>
+    <div id="login-screen" class="screen active glass-panel">
+        <div class="login-header">
+            <h2>AICE KRISTAL</h2>
+            <p>Masukkan 6 Digit PIN</p>
+        </div>
+        <div class="pin-display">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        </div>
+        <div class="keypad">
+            <button class="num-key" onclick="inputPin(1)">1</button>
+            <button class="num-key" onclick="inputPin(2)">2</button>
+            <button class="num-key" onclick="inputPin(3)">3</button>
+            <button class="num-key" onclick="inputPin(4)">4</button>
+            <button class="num-key" onclick="inputPin(5)">5</button>
+            <button class="num-key" onclick="inputPin(6)">6</button>
+            <button class="num-key" onclick="inputPin(7)">7</button>
+            <button class="num-key" onclick="inputPin(8)">8</button>
+            <button class="num-key" onclick="inputPin(9)">9</button>
+            <button class="num-key action-key" onclick="clearPin()">C</button>
+            <button class="num-key" onclick="inputPin(0)">0</button>
+            <button class="num-key action-key" onclick="submitPin()">OK</button>
+        </div>
+    </div>
+
+    <div id="dashboard-screen" class="screen">
+        <header class="app-header">
+            <h3 id="user-greeting">Halo, Owner</h3>
+            <div class="avatar"></div>
+        </header>
+        <main class="dashboard-content">
+            <div class="kpi-card glass">
+                <h4>Omset Hari Ini</h4>
+                <h2 id="omset-value">Rp 0</h2>
+            </div>
+            <div class="kpi-card glass alert-card">
+                <h4>Peringatan Sistem</h4>
+                <p>Plastik Besar (Kritis) di Gudang Petung</p>
+            </div>
+            <div class="menu-grid">
+                <button class="menu-btn"><i class="icon-pos"></i> POS Penjualan</button>
+                <button class="menu-btn"><i class="icon-produksi"></i> Produksi</button>
+                <button class="menu-btn"><i class="icon-stok"></i> Mutasi Stok</button>
+                <button class="menu-btn"><i class="icon-report"></i> Laporan</button>
+            </div>
+        </main>
+        <nav class="bottom-nav">
+            <button>Home</button>
+            <button>Delivery</button>
+            <button>Audit</button>
+            <button onclick="logout()">Keluar</button>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
