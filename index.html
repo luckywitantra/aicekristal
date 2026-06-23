@@ -1,68 +1,1393 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aice Kristal Super App</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="styles.css">
-    <meta name="theme-color" content="#121212">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Aice Kristal Super App</title>
+  
+  <style>
+      /* Warna Dasar Default Aice Kristal (Cyan/Blue Es) */
+      :root {
+        --brand-50: #e0f2fe;
+        --brand-100: #bae6fd;
+        --brand-500: #0ea5e9;
+        --brand-600: #0284c7;
+      }
+      /* Menyembunyikan garis scrollbar pada menu geser */
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0ea5e9">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
+  <link rel="stylesheet" href="styles.css">
+  <script>tailwind.config={darkMode:'class',theme:{extend:{colors:{brand:{50:'var(--brand-50)',100:'var(--brand-100)',500:'var(--brand-500)',600:'var(--brand-600)'}}}}}</script>
+  <script>
+        if (window.location.search.includes('mode=cfd')) {
+            document.write('<style>#login-screen, #sidebar, #main-app { display: none !important; }</style>');
+        }
+  </script>
 </head>
-<body>
-    <div id="login-screen" class="screen active glass-panel">
-        <div class="login-header">
-            <h2>AICE KRISTAL</h2>
-            <p>Masukkan 6 Digit PIN</p>
-        </div>
-        <div class="pin-display">
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        </div>
-        <div class="keypad">
-            <button class="num-key" onclick="inputPin(1)">1</button>
-            <button class="num-key" onclick="inputPin(2)">2</button>
-            <button class="num-key" onclick="inputPin(3)">3</button>
-            <button class="num-key" onclick="inputPin(4)">4</button>
-            <button class="num-key" onclick="inputPin(5)">5</button>
-            <button class="num-key" onclick="inputPin(6)">6</button>
-            <button class="num-key" onclick="inputPin(7)">7</button>
-            <button class="num-key" onclick="inputPin(8)">8</button>
-            <button class="num-key" onclick="inputPin(9)">9</button>
-            <button class="num-key action-key" onclick="clearPin()">C</button>
-            <button class="num-key" onclick="inputPin(0)">0</button>
-            <button class="num-key action-key" onclick="submitPin()">OK</button>
+<body class="text-slate-800 h-[100dvh] flex overflow-hidden relative transition-colors duration-300 bg-slate-50">
+
+  <div id="app-loader" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[99999] hidden flex-col items-center justify-center transition-all duration-300">
+    <div class="w-16 h-16 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4 shadow-[0_0_20px_rgba(14,165,233,0.5)]"></div>
+    <p id="loader-text" class="text-white font-bold tracking-widest uppercase text-sm drop-shadow-md">Memproses...</p>
+  </div>
+
+  <div id="cfd-screen" class="fixed inset-0 bg-slate-900 z-[9999] hidden flex overflow-hidden font-sans">
+    
+    <div class="w-2/3 h-full relative overflow-hidden bg-slate-900">
+        <div id="cfd-bg-screen" class="absolute inset-0 bg-cover bg-center transition-transform duration-[20s] ease-linear transform hover:scale-110 scale-105" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1920');"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-900/80 to-transparent flex flex-col justify-center p-16 lg:p-24 z-10">
+            <div class="w-28 h-28 bg-white/10 backdrop-blur-md border border-white/20 rounded-[2rem] flex items-center justify-center text-white shadow-[0_8px_32px_rgba(0,0,0,0.5)] mb-8 p-4 relative overflow-hidden group">
+                <div class="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-50"></div>
+                <img src="https://cdn-icons-png.flaticon.com/512/3081/3081308.png" class="app-logo-img w-full h-full object-contain filter drop-shadow-[0_4px_8px_rgba(0,0,0,0.5)] relative z-10">
+            </div>
+            <h1 class="text-7xl lg:text-8xl font-black mb-2 tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300 drop-shadow-2xl">
+                Aice Kristal
+            </h1>
+            <div class="flex items-center gap-4 mt-2">
+                <div class="h-1 w-12 bg-brand-500 rounded-full"></div>
+                <p class="text-2xl lg:text-3xl text-brand-400 font-bold tracking-wide" id="cfd-outlet-name">Loading...</p>
+            </div>
         </div>
     </div>
+    
+    <div class="w-1/3 bg-slate-50 flex flex-col shadow-[-20px_0_50px_rgba(0,0,0,0.2)] relative z-20">
+        <div class="h-28 bg-white flex flex-col justify-center px-8 border-b border-slate-200/60 shadow-sm shrink-0 relative z-10">
+            <p class="text-[10px] font-black uppercase tracking-widest text-brand-500 mb-1">Rincian Transaksi</p>
+            <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Pesanan Anda</h2>
+        </div>
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-4 bg-slate-50/80 min-h-0 custom-scroll relative" id="cfd-cart-list">
+            <i class="fas fa-shopping-bag absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-9xl text-slate-200 opacity-50 pointer-events-none -z-10"></i>
+        </div>
+        <div class="p-8 lg:p-10 bg-white rounded-t-[3rem] shadow-[0_-15px_40px_rgba(0,0,0,0.06)] border-t border-slate-100 shrink-0 relative z-30">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-8 h-8 rounded-full bg-brand-50 text-brand-500 flex items-center justify-center"><i class="fas fa-wallet"></i></div>
+                <p class="text-slate-500 font-black uppercase tracking-widest text-xs">Total Pembayaran</p>
+            </div>
+            <p class="text-5xl lg:text-6xl font-black text-slate-900 tracking-tighter" id="cfd-total">Rp 0</p>
+        </div>
+    </div>
+  
+    <div id="cfd-standby" class="absolute inset-0 bg-slate-950 flex flex-col items-center justify-center z-50 transition-opacity duration-700 overflow-hidden">
+         <div class="absolute inset-0 bg-radial-gradient from-transparent to-slate-950 z-10 pointer-events-none"></div>
+         <div id="cfd-bg-standby" class="absolute inset-0 bg-cover bg-center opacity-30 transition-all duration-1000 scale-105" style="background-image: url('https://images.unsplash.com/photo-1555939594-58d7cb561ad1?q=80&w=1920');"></div>
+         <div class="relative z-20 flex flex-col items-center">
+             <div class="w-56 h-56 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[3rem] flex items-center justify-center text-brand-500 shadow-[0_0_80px_rgba(14,165,233,0.15)] mb-12 p-8">
+                 <img src="https://cdn-icons-png.flaticon.com/512/3081/3081308.png" class="app-logo-img w-full h-full object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+             </div>
+             <h1 id="cfd-greeting-time" class="text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 mb-8 text-center drop-shadow-2xl tracking-tighter">Selamat Datang</h1>
+             <div class="flex items-center gap-4 bg-white/10 backdrop-blur-md border border-white/20 px-10 py-5 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
+                 <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(74,222,128,1)]"></div>
+                 <p id="cfd-greeting-outlet" class="text-3xl text-white font-bold text-center tracking-wide">Silakan Lakukan Pemesanan di Kasir</p>
+             </div>
+         </div>
+    </div>
+    
+    <div id="cfd-success" class="absolute inset-0 bg-gradient-to-br from-slate-900 via-emerald-950 to-emerald-900 flex flex-col items-center justify-center z-[60] hidden overflow-hidden">
+         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-emerald-500/20 rounded-full blur-[120px] pointer-events-none"></div>
+         <div class="relative z-10 flex flex-col items-center">
+             <div class="w-48 h-48 bg-gradient-to-tr from-emerald-400 to-green-300 rounded-full flex items-center justify-center text-white font-black text-7xl shadow-[0_0_60px_rgba(52,211,153,0.4)] mb-10 transform transition-transform duration-500 hover:scale-110">
+                 <i class="fas fa-check drop-shadow-md"></i>
+             </div>
+             <h1 class="text-6xl lg:text-7xl font-black text-white mb-6 text-center drop-shadow-2xl tracking-tighter">Pembayaran Berhasil</h1>
+             <div class="bg-black/30 backdrop-blur-xl border border-white/10 p-10 rounded-[2.5rem] shadow-2xl text-center min-w-[500px]">
+                 <p class="text-2xl text-emerald-200 font-bold uppercase tracking-widest mb-2">Kembalian Anda</p>
+                 <div id="cfd-kembali" class="text-white font-black text-5xl"></div>
+             </div>
+         </div>
+    </div>
+  </div>
 
-    <div id="dashboard-screen" class="screen">
-        <header class="app-header">
-            <h3 id="user-greeting">Halo, Owner</h3>
-            <div class="avatar"></div>
-        </header>
-        <main class="dashboard-content">
-            <div class="kpi-card glass">
-                <h4>Omset Hari Ini</h4>
-                <h2 id="omset-value">Rp 0</h2>
+  <div id="login-screen" class="fixed inset-0 bg-slate-900 z-[200] flex flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-sm p-6 lg:p-8 shadow-2xl flex flex-col items-center border border-slate-800">
+      <div class="w-20 h-20 bg-gradient-to-br from-brand-500 to-cyan-400 rounded-[1.5rem] flex items-center justify-center shadow-lg mb-4 p-3">
+          <img src="https://cdn-icons-png.flaticon.com/512/3081/3081308.png" class="app-logo-img w-full h-full object-contain filter drop-shadow-md">
+      </div>
+      <h2 class="text-xl lg:text-2xl font-black text-slate-800 mb-1">Aice Kristal Super App</h2>
+      <p class="text-xs lg:text-sm font-bold text-slate-400 mb-6">Masukkan PIN Otorisasi</p>
+      
+      <div id="pin-numpad-container" class="w-full transition-all duration-300">
+          <div class="flex gap-4 mb-6 justify-center">
+            <div class="w-4 h-4 rounded-full border-2 border-slate-300 pin-dot" id="dot-1"></div><div class="w-4 h-4 rounded-full border-2 border-slate-300 pin-dot" id="dot-2"></div>
+            <div class="w-4 h-4 rounded-full border-2 border-slate-300 pin-dot" id="dot-3"></div><div class="w-4 h-4 rounded-full border-2 border-slate-300 pin-dot" id="dot-4"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 lg:gap-3 w-full mb-4">
+            <button class="numpad-btn" onclick="superApp.addPin('1')">1</button><button class="numpad-btn" onclick="superApp.addPin('2')">2</button><button class="numpad-btn" onclick="superApp.addPin('3')">3</button>
+            <button class="numpad-btn" onclick="superApp.addPin('4')">4</button><button class="numpad-btn" onclick="superApp.addPin('5')">5</button><button class="numpad-btn" onclick="superApp.addPin('6')">6</button>
+            <button class="numpad-btn" onclick="superApp.addPin('7')">7</button><button class="numpad-btn" onclick="superApp.addPin('8')">8</button><button class="numpad-btn" onclick="superApp.addPin('9')">9</button>
+            <button class="numpad-btn text-slate-400 text-lg border-transparent shadow-none hover:bg-slate-100" onclick="superApp.clearPin()"><i class="fas fa-times"></i></button>
+            <button class="numpad-btn" onclick="superApp.addPin('0')">0</button>
+            <button class="numpad-btn text-red-500 text-lg border-transparent shadow-none hover:bg-red-50" onclick="superApp.delPin()"><i class="fas fa-backspace"></i></button>
+          </div>
+      </div>
+      <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center mt-2 animate-pulse" id="login-status">Memuat Database Google...</p>
+    </div>
+  </div>
+
+  <div id="mobile-overlay" class="fixed inset-0 bg-slate-900/50 z-40 hidden lg:hidden backdrop-blur-sm transition-opacity" onclick="superApp.toggleSidebar()"></div>
+
+  <aside id="sidebar" class="fixed lg:static top-0 left-0 h-[100dvh] w-72 bg-white border-r border-slate-100 flex flex-col pt-6 z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 shadow-[20px_0_40px_rgba(0,0,0,0.05)] lg:shadow-none shrink-0">
+    <div class="flex items-center justify-between px-7 mb-8 shrink-0 relative">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-cyan-400 rounded-2xl flex items-center justify-center p-2.5 shadow-[0_8px_16px_rgba(14,165,233,0.3)] relative group cursor-pointer shrink-0">
+                <div class="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <img src="https://cdn-icons-png.flaticon.com/512/3081/3081308.png" class="app-logo-img w-full h-full object-contain filter drop-shadow-md group-hover:scale-110 transition-transform duration-300">
             </div>
-            <div class="kpi-card glass alert-card">
-                <h4>Peringatan Sistem</h4>
-                <p>Plastik Besar (Kritis) di Gudang Petung</p>
+            <div class="flex flex-col min-w-0">
+                <span class="font-black text-lg tracking-tight text-slate-800 leading-none mb-1.5 truncate max-w-[130px]" id="shift-user-name">Aice Kristal</span>
+                <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center justify-center px-2.5 py-0.5 bg-brand-50 border border-brand-100 rounded-md text-[9px] font-black text-brand-600 uppercase tracking-widest w-max shadow-sm" id="sb-role">Kasir</span>
+                    <button onclick="superApp.logout()" class="w-8 h-8 rounded-md bg-white border border-slate-200 text-slate-400 hover:bg-rose-500 hover:text-white hover:border-rose-500 shadow-sm transition-all active:scale-90 flex items-center justify-center" title="Keluar Akun">
+                        <i class="fas fa-power-off text-[10px]"></i>
+                    </button>
+                </div>
             </div>
-            <div class="menu-grid">
-                <button class="menu-btn"><i class="icon-pos"></i> POS Penjualan</button>
-                <button class="menu-btn"><i class="icon-produksi"></i> Produksi</button>
-                <button class="menu-btn"><i class="icon-stok"></i> Mutasi Stok</button>
-                <button class="menu-btn"><i class="icon-report"></i> Laporan</button>
-            </div>
-        </main>
-        <nav class="bottom-nav">
-            <button>Home</button>
-            <button>Delivery</button>
-            <button>Audit</button>
-            <button onclick="logout()">Keluar</button>
-        </nav>
+        </div>
+        <button class="lg:hidden w-8 h-8 flex items-center justify-center bg-slate-50 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors shrink-0 ml-2" onclick="superApp.toggleSidebar()">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
 
-    <script src="app.js"></script>
+    <div id="header-initial" class="hidden"></div>
+    
+    <nav class="flex-1 overflow-y-auto custom-scroll px-4 flex flex-col gap-1.5 py-2">
+        <div class="flex items-center gap-3 px-4 mt-2 mb-3 shrink-0">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Operasional</p>
+            <div class="h-px bg-slate-100 flex-1"></div>
+        </div>
+
+        <button onclick="superApp.switchMenu('pos')" id="nav-pos" class="nav-btn nav-active w-full flex items-center px-4 py-3.5 rounded-[1.25rem] transition-all duration-300 group shrink-0">
+            <i class="fas fa-cash-register w-6 text-slate-400 group-hover:text-brand-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+            <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Mesin Kasir (POS)</span>
+        </button>
+        
+        <button onclick="superApp.openKasKeluar()" class="w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-rose-500 hover:bg-rose-50 transition-all duration-300 group shrink-0">
+            <i class="fas fa-money-bill-transfer w-6 group-hover:text-rose-600 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+            <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Input Kas Keluar</span>
+        </button>
+        
+        <button onclick="superApp.switchMenu('terima')" id="nav-terima" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group shrink-0">
+            <i class="fas fa-truck-ramp-box w-6 text-slate-400 group-hover:text-green-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+            <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Terima Barang</span>
+            <span id="badge-terima" class="hidden ml-auto bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-[10px] font-black shadow-sm border border-amber-200">0</span>
+        </button>
+        
+        <button onclick="superApp.switchMenu('opname')" id="nav-opname" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group shrink-0">
+            <i class="fas fa-clipboard-check w-6 text-slate-400 group-hover:text-purple-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+            <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Opname Fisik</span>
+            <span id="badge-opname" class="hidden ml-auto bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-[10px] font-black shadow-sm border border-amber-200">0</span>
+        </button>
+        
+        <button onclick="superApp.switchMenu('report')" id="nav-report" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group shrink-0">
+            <i class="fas fa-chart-pie w-6 text-slate-400 group-hover:text-blue-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+            <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Riwayat & Rekap</span>
+        </button>
+        
+        <div id="admin-menus" class="hidden flex-col gap-1.5 shrink-0">
+            <div class="flex items-center gap-3 px-4 mt-6 mb-3 shrink-0">
+                <i class="fas fa-lock text-[10px] text-slate-300"></i>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.15em]">Akses Manajer</p>
+                <div class="h-px bg-slate-100 flex-1"></div>
+            </div>
+            
+            <button onclick="superApp.switchMenu('audit')" id="nav-audit" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group">
+                <i class="fas fa-user-check w-6 text-slate-400 group-hover:text-indigo-600 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+                <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Audit & Approval</span>
+                <span id="badge-audit" class="hidden ml-auto bg-rose-500 text-white px-2 py-0.5 rounded-md text-[10px] font-black shadow-[0_0_10px_rgba(225,29,72,0.5)] animate-pulse border border-rose-400">0</span>
+            </button>
+            
+            <button onclick="superApp.switchMenu('ai')" id="nav-ai" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group">
+                <i class="fas fa-robot w-6 text-slate-400 group-hover:text-pink-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+                <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300 text-transparent bg-clip-text bg-gradient-to-r from-slate-500 to-slate-500 group-hover:from-pink-500 group-hover:to-orange-500">Dashboard Owner</span>
+            </button>
+            
+            <button onclick="superApp.switchMenu('gudang')" id="nav-gudang" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group">
+                <i class="fas fa-warehouse w-6 text-slate-400 group-hover:text-emerald-600 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+                <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Gudang & Master</span>
+            </button>
+            
+            <button onclick="superApp.switchMenu('outlet')" id="nav-outlet" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group">
+                <i class="fas fa-store w-6 text-slate-400 group-hover:text-teal-600 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+                <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Cabang & Harga</span>
+            </button>
+            
+            <button onclick="superApp.switchMenu('staf')" id="nav-staf" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group">
+                <i class="fas fa-users-gear w-6 text-slate-400 group-hover:text-amber-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+                <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Kinerja Karyawan</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="px-6 py-6 border-t border-slate-100 flex flex-col gap-3 shrink-0 bg-white z-10 pb-28 md:pb-6 relative shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+        <button onclick="superApp.promptTutupShift()" class="w-full py-4 bg-slate-900 text-white font-extrabold rounded-xl hover:bg-slate-800 shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-1 active:translate-y-0 text-sm flex justify-center items-center gap-2 group">
+            <i class="fas fa-door-closed text-slate-400 group-hover:text-white transition-colors text-lg"></i> Tutup Shift Harian
+        </button>
+    </div>
+  </aside>
+
+  <main id="main-app" class="flex-1 flex flex-col h-[100dvh] relative overflow-hidden hidden min-w-0">
+    <header class="h-16 lg:h-20 glass-header border-b border-slate-200 flex items-center justify-between px-4 lg:px-8 z-10 shrink-0">
+      <div class="flex items-center gap-4">
+        <button class="lg:hidden text-slate-600 text-2xl" onclick="superApp.toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <div>
+          <h1 class="text-lg lg:text-2xl font-extrabold tracking-tight text-slate-800" id="page-title">POS</h1>
+          <div class="flex items-center gap-2 hidden md:flex"><span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span><p class="text-xs font-bold text-slate-500">Cabang: <span id="header-subtitle" class="text-brand-500">Pusat</span></p></div>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2 lg:gap-3 overflow-x-auto no-scrollbar py-1 pr-1">
+        <div class="flex items-center bg-white border border-slate-200 rounded-full p-1 shadow-sm shrink-0">
+            <button onclick="superApp.pullFreshData()" class="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-slate-100 transition-colors text-[10px] font-extrabold text-slate-500 hover:text-blue-600 group">
+                <i class="fas fa-cloud-download-alt group-hover:-translate-y-0.5 transition-transform"></i>
+                <span class="hidden md:inline">Tarik Data</span>
+            </button>
+            <div class="w-px h-4 bg-slate-200 mx-1"></div>
+            <div id="network-indicator" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 cursor-pointer transition-colors shadow-sm hover:bg-emerald-100" onclick="superApp.openSyncCenter()">
+                <span id="net-dot" class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></span>
+                <span id="net-text" class="text-[10px] font-extrabold text-emerald-600 hidden md:inline tracking-wide">Online</span>
+            </div>
+        </div>
+        
+        <button onclick="superApp.openModal('modal-system-settings')" class="h-10 flex bg-white border border-slate-200 text-slate-600 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 px-3 lg:px-4 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all active:scale-95 items-center gap-2 shrink-0 group">
+            <i class="fas fa-cog group-hover:animate-[spin_2s_linear_infinite]"></i>
+            <span class="hidden lg:inline">Pengaturan</span>
+        </button>
+        
+        <button onclick="superApp.openCFD(false)" class="h-10 hidden lg:flex bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 px-3 lg:px-4 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all active:scale-95 items-center gap-2 shrink-0">
+            <i class="fas fa-desktop"></i> Layar
+        </button>
+        
+        <button onclick="superApp.connectBluetooth()" id="btn-printer" class="h-10 flex bg-white border border-slate-200 text-slate-600 hover:text-slate-800 hover:bg-slate-50 px-3 lg:px-4 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all active:scale-95 items-center gap-2 shrink-0">
+            <i class="fas fa-print"></i> <span id="printer-status" class="hidden sm:inline">Printer</span>
+        </button>
+        
+        <button onclick="superApp.openOutletSelector()" class="w-10 h-10 md:w-auto md:px-4 flex items-center justify-center gap-2 bg-slate-900 text-white rounded-full md:rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.15)] hover:bg-slate-800 transition-all active:scale-95 shrink-0 group" title="Pilih Cabang">
+            <i class="fas fa-map-marker-alt text-brand-400 group-hover:animate-bounce"></i>
+            <span id="header-outlet-name" class="font-bold text-sm hidden md:block tracking-wide">Pilih Cabang</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto w-full relative p-4 lg:p-6 custom-scroll" id="main-content-scroll">
+      
+      <div id="view-pos" class="app-view flex flex-col md:flex-row h-full gap-4 lg:gap-6 min-h-0 transition-all duration-300 relative">
+        <div class="flex-1 flex flex-col min-h-0 pb-[140px] md:pb-0"> 
+          <div class="mb-4 relative shrink-0">
+             <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+             <input type="text" readonly onclick="osKeyboard.open('product-search-input', 'text')" id="product-search-input" placeholder="Sentuh untuk Cari Produk Es / Plastik..." class="w-full bg-white border border-slate-200 rounded-2xl pl-12 pr-4 py-3.5 font-bold text-sm shadow-sm outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 text-slate-800 transition cursor-pointer" oninput="superApp.filterProducts(this.value)">
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 overflow-y-auto pb-24 items-stretch content-start custom-scroll" id="product-list"></div>
+        </div>
+        
+        <div id="mobile-cart-overlay" class="fixed inset-0 bg-slate-900/60 z-[80] hidden md:hidden backdrop-blur-sm transition-opacity" onclick="superApp.toggleMobileCart()"></div>
+        
+        <aside id="cart-aside" class="fixed md:static bottom-0 left-0 w-full md:w-[320px] lg:w-[380px] bg-white border-t md:border border-slate-200 rounded-t-[2.5rem] md:rounded-[2rem] flex flex-col shadow-[0_-15px_40px_rgba(0,0,0,0.15)] md:shadow-lg h-[85dvh] md:h-full shrink-0 z-[90] md:z-auto transition-transform duration-300 transform translate-y-full md:translate-y-0">
+          <div class="w-full flex justify-center pt-3 pb-1 md:hidden shrink-0 cursor-pointer" onclick="superApp.toggleMobileCart()">
+              <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+          </div>
+          <div class="p-5 md:pt-5 pt-2 border-b border-slate-100 flex justify-between items-center bg-slate-50 md:rounded-t-[2rem] shrink-0">
+            <h2 class="font-extrabold text-lg text-slate-800">Keranjang</h2>
+            <div class="flex items-center gap-2">
+                <span class="bg-brand-100 text-brand-600 px-3 py-1 rounded-full text-xs font-black shadow-sm" id="cart-badge">0 Item</span>
+                <button class="md:hidden w-8 h-8 flex items-center justify-center bg-white rounded-full border border-slate-200 text-slate-400 hover:text-slate-600 shadow-sm" onclick="superApp.toggleMobileCart()"><i class="fas fa-times"></i></button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-y-auto p-4 space-y-3 custom-scroll min-h-0 scroll-smooth pb-20 md:pb-4" id="cart-container"></div>
+          <div class="p-5 bg-white border-t border-slate-100 md:rounded-b-[2rem] shrink-0 pb-8 md:pb-5">
+            <div class="flex justify-between items-center mb-4"><span class="text-slate-400 font-semibold text-sm">Total Tagihan</span><span class="text-2xl font-black text-brand-600" id="total-price">Rp 0</span></div>
+            <button onclick="superApp.openPaymentModal()" class="w-full bg-brand-500 text-white py-4 rounded-xl font-extrabold shadow-[0_8px_20px_rgba(14,165,233,0.3)] hover:bg-brand-600 active:scale-95 transition-all text-lg tracking-wide"><i class="fas fa-wallet mr-2"></i> BAYAR SEKARANG</button>
+          </div>
+        </aside>
+
+        <div class="fixed bottom-[75px] left-0 w-full bg-transparent p-3 md:hidden z-[70] transition-transform" id="floating-cart-btn">
+            <button onclick="superApp.toggleMobileCart()" class="w-full bg-slate-900 text-white rounded-2xl py-3.5 px-5 flex justify-between items-center active:scale-95 transition shadow-[0_10px_25px_rgba(0,0,0,0.25)] border border-slate-700">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-shopping-bag text-brand-500 text-lg"></i>
+                    <div class="bg-slate-700 px-2 py-0.5 rounded-md text-xs font-bold" id="mobile-cart-qty">0 Item</div>
+                </div>
+                <div class="font-black text-lg text-brand-500" id="mobile-cart-total">Rp 0</div>
+            </button>
+        </div>
+      </div>
+      
+      <div id="view-terima" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-6">
+        <div class="bg-white p-4 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 text-slate-800 flex flex-col h-full min-h-0 relative overflow-hidden">
+            <div class="absolute top-0 right-0 -mt-10 -mr-6 text-9xl text-slate-50 opacity-50 pointer-events-none">
+                <i class="fas fa-truck-ramp-box"></i>
+            </div>
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b border-slate-100 pb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-green-200/50 shrink-0">
+                        <i class="fas fa-dolly"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-2xl text-slate-800 tracking-tight">Penerimaan Barang</h3>
+                        <p class="text-xs md:text-sm font-bold text-slate-500 mt-1 flex items-center gap-2">
+                            Input barang masuk ke <span class="bg-brand-50 text-brand-600 px-2 py-0.5 rounded-md border border-brand-100 uppercase tracking-widest text-[10px]" id="lbl-terima-outlet"></span>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full lg:w-auto">
+                    <button onclick="superApp.openWaHistory('terima')" class="flex-1 lg:flex-none bg-white text-indigo-600 border-2 border-indigo-50 px-5 py-3 rounded-xl text-sm font-bold hover:bg-indigo-50 hover:border-indigo-100 shadow-sm transition-all active:scale-95 flex justify-center items-center gap-2">
+                        <i class="fab fa-whatsapp text-lg"></i> Riwayat WA
+                    </button>
+                    <button onclick="superApp.submitTerimaBarang()" class="flex-1 lg:flex-none bg-gradient-to-r from-brand-500 to-cyan-500 text-white px-6 py-3 rounded-xl text-sm font-extrabold hover:from-brand-600 hover:to-cyan-600 shadow-[0_8px_20px_rgba(14,165,233,0.3)] transition-all hover:-translate-y-1 active:translate-y-0 active:scale-95 flex justify-center items-center gap-2 tracking-wide">
+                        <i class="fas fa-paper-plane text-lg"></i> Lapor Datang
+                    </button>
+                </div>
+            </div>
+            <div class="hidden md:flex flex-col flex-1 min-h-0 overflow-y-auto relative custom-scroll pr-2 pb-28 md:pb-2">
+                <table class="w-full text-left whitespace-nowrap text-sm mb-8">
+                    <thead class="text-slate-400 border-b border-slate-200">
+                        <tr>
+                            <th class="pb-3 px-4 min-w-[150px] font-bold uppercase tracking-widest text-[10px]">Produk</th>
+                            <th class="pb-3 px-4 text-center font-bold uppercase tracking-widest text-[10px]">Jumlah Diterima</th>
+                            <th class="pb-3 px-4 w-1/2 font-bold uppercase tracking-widest text-[10px]">Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="terima-tbody-utama" class="font-bold divide-y divide-slate-50 text-slate-700"></tbody>
+                </table>
+            </div>
+            <div class="md:hidden space-y-4 flex-1 overflow-y-auto min-h-0 custom-scroll content-start pb-28" id="terima-mobile-cards"></div>
+        </div>
+      </div>
+      
+      <div id="view-opname" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-6">
+        <div class="bg-white p-4 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 text-slate-800 flex flex-col h-full min-h-0 relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b border-slate-100 pb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-200/50 shrink-0">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-2xl text-slate-800 tracking-tight">Opname Fisik Stok</h3>
+                        <p class="text-xs md:text-sm font-bold text-slate-500 mt-1 flex items-center gap-2">
+                            Sesuaikan fisik bahan di <span class="bg-brand-50 text-brand-600 px-2 py-0.5 rounded-md border border-brand-100 uppercase tracking-widest text-[10px]" id="lbl-opname-outlet"></span>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full lg:w-auto">
+                    <button onclick="superApp.openWaHistory('opname')" class="flex-1 lg:flex-none bg-white text-indigo-600 border-2 border-indigo-50 px-5 py-3 rounded-xl text-sm font-bold hover:bg-indigo-50 hover:border-indigo-100 shadow-sm transition-all active:scale-95 flex justify-center items-center gap-2">
+                        <i class="fab fa-whatsapp text-lg"></i> Riwayat WA
+                    </button>
+                    <button onclick="superApp.submitOpname()" class="flex-1 lg:flex-none bg-gradient-to-r from-brand-500 to-cyan-500 text-white px-6 py-3 rounded-xl text-sm font-extrabold hover:from-brand-600 hover:to-cyan-600 shadow-[0_8px_20px_rgba(14,165,233,0.3)] transition-all hover:-translate-y-1 active:translate-y-0 active:scale-95 flex justify-center items-center gap-2 tracking-wide">
+                        <i class="fas fa-paper-plane text-lg"></i> Lapor Audit
+                    </button>
+                </div>
+            </div>
+            <div class="hidden md:flex flex-col flex-1 min-h-0 overflow-y-auto relative custom-scroll pr-2 pb-28 md:pb-2">
+                <table class="w-full text-left whitespace-nowrap text-sm mb-8">
+                    <thead class="text-slate-400 border-b border-slate-200">
+                        <tr>
+                            <th class="pb-3 px-4 min-w-[150px] font-bold uppercase tracking-widest text-[10px]">Produk</th>
+                            <th class="pb-3 text-center px-4 font-bold uppercase tracking-widest text-[10px]">Sistem</th>
+                            <th class="pb-3 px-4 font-bold uppercase tracking-widest text-[10px] text-center">Input Fisik</th>
+                            <th class="pb-3 text-right px-4 font-bold uppercase tracking-widest text-[10px]">Selisih</th>
+                            <th class="pb-3 px-4 w-1/3 font-bold uppercase tracking-widest text-[10px]">Keterangan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="opname-tbody-utama" class="font-bold divide-y divide-slate-50 text-slate-700"></tbody>
+                </table>
+            </div>
+            <div class="md:hidden space-y-4 flex-1 overflow-y-auto min-h-0 custom-scroll content-start pb-28" id="opname-mobile-cards"></div>
+        </div>
+      </div>
+
+      <div id="view-audit" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-20 md:pb-0">
+        <div class="bg-white p-4 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 text-slate-800 flex flex-col h-full min-h-0 relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b border-slate-100 pb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-indigo-200/50">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-2xl text-slate-800 tracking-tight">Audit & Approval</h3>
+                        <p class="text-xs md:text-sm font-bold text-slate-500 mt-1">Otorisasi massal laporan operasional.</p>
+                    </div>
+                </div>
+                <div id="bulk-action-bar" class="hidden flex gap-2 w-full lg:w-auto mt-2 lg:mt-0">
+                    <button onclick="superApp.processBulkApproval('Disetujui')" class="flex-1 lg:flex-none bg-gradient-to-r from-emerald-400 to-green-500 text-white px-5 py-3 rounded-xl text-sm font-extrabold hover:from-emerald-500 hover:to-green-600 shadow-[0_8px_15px_rgba(34,197,94,0.25)] transition-all hover:-translate-y-1 active:translate-y-0 active:scale-95 flex justify-center items-center gap-2">
+                        <i class="fas fa-check-double text-lg"></i> Setuju Terpilih
+                    </button>
+                    <button onclick="superApp.processBulkApproval('Ditolak')" class="flex-1 lg:flex-none bg-gradient-to-r from-rose-500 to-red-600 text-white px-5 py-3 rounded-xl text-sm font-extrabold hover:from-rose-600 hover:to-red-700 shadow-[0_8px_15px_rgba(239,68,68,0.25)] transition-all hover:-translate-y-1 active:translate-y-0 active:scale-95 flex justify-center items-center gap-2">
+                        <i class="fas fa-ban text-lg"></i> Tolak Terpilih
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex gap-2 bg-slate-50 p-1.5 rounded-xl shadow-inner border border-slate-200 overflow-x-auto mb-4 shrink-0 relative z-10">
+                <button onclick="superApp.toggleAuditTab('opname')" id="tab-audit-opname" class="px-6 py-3 bg-white text-brand-600 rounded-lg text-sm font-extrabold shadow-sm whitespace-nowrap transition border border-slate-200">
+                    <i class="fas fa-clipboard-list mr-1"></i> Audit Opname Fisik
+                </button>
+                <button onclick="superApp.toggleAuditTab('terima')" id="tab-audit-terima" class="px-6 py-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-lg text-sm font-extrabold whitespace-nowrap transition border border-transparent">
+                    <i class="fas fa-dolly mr-1"></i> Audit Barang Masuk
+                </button>
+            </div>
+            
+            <div id="audit-content-opname" class="flex-1 overflow-x-auto overflow-y-auto bg-white rounded-2xl border border-slate-200 min-h-0 custom-scroll relative shadow-inner">
+                <table class="w-full text-left whitespace-nowrap text-sm">
+                    <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm z-10 shadow-sm">
+                        <tr>
+                            <th class="py-4 px-4 text-center w-12"><input type="checkbox" class="w-5 h-5 rounded cursor-pointer accent-brand-500" onchange="superApp.toggleAllAuditCb('opname', this.checked)"></th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px]">Waktu</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px]">Outlet & Kasir</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px]">Item Laporan</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px] text-center">Sys vs Fisik</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px] text-right">Selisih</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-opname-tbody" class="font-bold divide-y divide-slate-100 text-slate-700"></tbody>
+                </table>
+            </div>
+
+            <div id="audit-content-terima" class="hidden flex-1 overflow-x-auto overflow-y-auto bg-white rounded-2xl border border-slate-200 min-h-0 custom-scroll relative shadow-inner">
+                <table class="w-full text-left whitespace-nowrap text-sm">
+                    <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm z-10 shadow-sm">
+                        <tr>
+                            <th class="py-4 px-4 text-center w-12"><input type="checkbox" class="w-5 h-5 rounded cursor-pointer accent-brand-500" onchange="superApp.toggleAllAuditCb('terima', this.checked)"></th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px]">Waktu</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px]">Outlet & Kasir</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px]">Item Masuk</th>
+                            <th class="py-4 px-4 font-bold uppercase tracking-widest text-[10px] text-center">Qty Diterima</th>
+                        </tr>
+                    </thead>
+                    <tbody id="audit-terima-tbody" class="font-bold divide-y divide-slate-100 text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <div id="view-report" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-20 md:pb-0">
+        <div class="flex justify-between items-center mb-2 shrink-0 md:hidden">
+            <h3 class="font-extrabold text-2xl text-slate-800">Laporan</h3>
+        </div>
+        <div class="flex gap-2 bg-slate-50 md:bg-white p-1.5 rounded-xl shadow-inner md:shadow-none border border-slate-200 overflow-x-auto w-full custom-scroll shrink-0">
+            <button onclick="superApp.toggleReportTab('trx')" id="tab-trx" class="px-5 py-2.5 bg-white text-slate-800 rounded-lg text-sm font-bold shadow-sm whitespace-nowrap transition border border-slate-200">Dashboard & Transaksi</button>
+            <button onclick="superApp.toggleReportTab('rekap')" id="tab-rekap" class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-bold whitespace-nowrap transition border border-transparent">Rekap Jualan</button>
+            <button onclick="superApp.toggleReportTab('kas')" id="tab-kas" class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-bold whitespace-nowrap transition border border-transparent">Kas Keluar</button>
+            <button onclick="superApp.toggleReportTab('selisih')" id="tab-selisih" class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-bold whitespace-nowrap transition border border-transparent">Audit Selisih</button>
+            <button onclick="superApp.toggleReportTab('bom')" id="tab-bom" class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-bold whitespace-nowrap transition border border-transparent"><i class="fas fa-boxes-stacked mr-1"></i> Analisis Stok</button>
+        </div>
+
+        <div id="mobile-filter-modal" class="fixed inset-x-0 bottom-0 bg-white rounded-t-[2rem] shadow-[0_-20px_40px_rgba(0,0,0,0.2)] p-6 z-[80] transform translate-y-full transition-transform duration-300 md:static md:translate-y-0 md:bg-transparent md:shadow-none md:p-0 md:flex md:flex-col lg:flex-row lg:justify-between lg:items-center md:gap-4 shrink-0 w-full max-h-[85dvh] overflow-y-auto custom-scroll">
+            <div class="flex flex-col md:flex-row gap-3 md:gap-2 flex-wrap items-center w-full">
+                <input type="text" id="filter-search-trx" placeholder="Cari Resi..." class="w-full md:w-auto md:flex-1 bg-slate-50 md:bg-white border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-sm text-slate-700 outline-none focus:border-brand-500 transition cursor-pointer" readonly onclick="osKeyboard.open('filter-search-trx', 'text')" oninput="superApp.renderReport()">
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <input type="date" id="filter-start" class="flex-1 md:w-auto bg-slate-50 md:bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-sm text-slate-700 outline-none shadow-sm" onchange="superApp.renderReport()">
+                    <span class="text-slate-400 font-bold">-</span>
+                    <input type="date" id="filter-end" class="flex-1 md:w-auto bg-slate-50 md:bg-white border border-slate-200 rounded-xl px-3 py-2.5 font-bold text-sm text-slate-700 outline-none shadow-sm" onchange="superApp.renderReport()">
+                </div>
+                <select id="report-outlet-filter" class="w-full md:w-auto bg-slate-50 md:bg-white border border-slate-200 rounded-xl px-4 py-2.5 font-bold text-sm outline-none shadow-sm hidden text-slate-800" onchange="superApp.renderReport()"></select>
+                <div class="flex gap-2 w-full md:w-auto mt-2 md:mt-0">
+                    <button onclick="superApp.exportPDF()" class="flex-1 md:flex-none bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition flex justify-center items-center active:scale-95"><i class="fas fa-file-pdf text-red-400 text-lg"></i></button>
+                    <button onclick="superApp.sendReportToWA()" class="flex-[3] md:flex-none bg-[#25D366] text-white px-5 py-2.5 rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-[#20bd5a] transition flex items-center justify-center gap-2 active:scale-95"><i class="fab fa-whatsapp text-lg"></i><span class="hidden md:inline">Lapor Owner</span></button>
+                </div>
+            </div>
+            <button onclick="superApp.toggleReportFilter()" class="w-full bg-brand-500 text-white font-extrabold py-3.5 rounded-xl mt-6 md:hidden active:scale-95 transition shrink-0 shadow-[0_8px_20px_rgba(14,165,233,0.3)]">TERAPKAN & TUTUP</button>
+        </div>
+
+        <div id="pdf-export-area" class="bg-slate-50/50 md:bg-white rounded-[2rem] shadow-sm md:border border-slate-100 p-0 md:p-8 flex-1 flex flex-col min-h-0 relative">
+            <div class="text-center mb-6 lg:mb-8 border-b border-slate-200/60 pb-4 lg:pb-6 shrink-0 pt-4 md:pt-0">
+                <h2 class="text-2xl lg:text-3xl font-black uppercase tracking-widest text-slate-800 mb-1">Laporan Operasional Aice Kristal</h2>
+                <p class="text-slate-500 font-bold text-xs lg:text-sm" id="report-title-label"></p>
+                <p class="text-[9px] lg:text-[10px] font-bold text-slate-400 mt-1 uppercase" id="report-date-label"></p>
+            </div>
+            
+            <div id="report-content-trx" class="flex-1 flex flex-col min-h-0 px-4 md:px-0">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6 shrink-0">
+                    <div class="bg-gradient-to-br from-brand-500 to-cyan-400 p-4 lg:p-5 rounded-[1.25rem] text-white shadow-lg shadow-cyan-200/50 relative overflow-hidden group">
+                        <i class="fas fa-wallet absolute -bottom-4 -right-4 text-7xl text-white/20 group-hover:scale-110 transition-transform"></i>
+                        <p class="text-[10px] lg:text-xs font-black uppercase tracking-widest text-white/80 mb-1 relative z-10">Total Omset</p>
+                        <h4 class="text-xl lg:text-2xl font-black relative z-10 drop-shadow-sm truncate" id="rep-total-omset">Rp 0</h4>
+                        <div class="mt-2 inline-flex items-center gap-1.5 px-2 py-1 bg-white/20 backdrop-blur-sm rounded-md text-[10px] font-bold relative z-10" id="rep-diff-omset">-</div>
+                    </div>
+                    <div class="bg-white p-4 lg:p-5 rounded-[1.25rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                        <p class="text-[10px] lg:text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Kas Tunai</p>
+                        <h4 class="text-xl lg:text-2xl font-black text-emerald-600 truncate" id="rep-total-tunai">Rp 0</h4>
+                        <div class="mt-2 text-[10px] font-bold text-slate-500" id="rep-diff-tunai">-</div>
+                    </div>
+                    <div class="bg-white p-4 lg:p-5 rounded-[1.25rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                        <p class="text-[10px] lg:text-xs font-black uppercase tracking-widest text-slate-400 mb-1">QRIS / Transfer</p>
+                        <h4 class="text-xl lg:text-2xl font-black text-blue-600 truncate" id="rep-total-qris">Rp 0</h4>
+                        <div class="mt-2 text-[10px] font-bold text-slate-500" id="rep-diff-qris">-</div>
+                    </div>
+                    <div class="bg-white p-4 lg:p-5 rounded-[1.25rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                        <p class="text-[10px] lg:text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Jumlah Struk</p>
+                        <h4 class="text-xl lg:text-2xl font-black text-slate-800 truncate" id="rep-total-trx">0</h4>
+                        <div class="mt-2 text-[10px] font-bold text-slate-500" id="rep-diff-trx">-</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-8 shrink-0">
+                    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-[1.25rem] p-4 lg:p-5 shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h4 class="font-extrabold text-slate-800 text-sm"><i class="fas fa-chart-line text-brand-500 mr-2"></i>Tren Penjualan</h4>
+                            <select id="filter-trend-range" onchange="superApp.renderReport()" class="bg-slate-50 border border-slate-200 text-slate-600 text-[10px] md:text-xs font-bold rounded-lg px-2 py-1 outline-none focus:border-brand-500 cursor-pointer">
+                                <option value="7">7 Hari Terakhir</option>
+                                <option value="30">1 Bulan Terakhir</option>
+                                <option value="365">1 Tahun Terakhir</option>
+                            </select>
+                        </div>
+                        <div id="report-trend-chart" class="flex-1 flex items-end gap-1 h-32 md:h-48 mt-auto border-b border-slate-100 pb-2 relative"></div>
+                        <div class="flex justify-between mt-2 text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-widest" id="report-trend-labels"></div>
+                    </div>
+
+                    <div class="bg-white border border-slate-200 rounded-[1.25rem] p-4 lg:p-5 shadow-sm flex flex-col">
+                        <h4 class="font-extrabold text-slate-800 text-sm mb-4"><i class="fas fa-trophy text-amber-500 mr-2"></i>5 Produk Terlaris</h4>
+                        <div id="report-top-5-list" class="flex flex-col gap-3 flex-1"></div>
+                    </div>
+                </div>
+
+                <h3 class="font-extrabold text-lg mb-3 text-slate-700 flex items-center gap-2 shrink-0"><i class="fas fa-list text-brand-500"></i> Detail Histori Transaksi</h3>
+                <div class="flex-1 overflow-x-auto overflow-y-auto bg-white lg:rounded-2xl border-t border-b lg:border border-slate-200 min-h-[300px] relative custom-scroll lg:shadow-inner -mx-4 lg:mx-0">
+                    <table class="w-full text-left whitespace-nowrap text-sm text-slate-800">
+                        <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr><th class="py-3 px-3 md:px-5">Resi & Waktu</th><th class="py-3 px-3 md:px-5">Kasir / Outlet</th><th class="py-3 px-3 md:px-5">Metode</th><th class="py-3 px-3 md:px-5 text-right">Total Bayar</th><th class="py-3 px-3 md:px-5 text-center" data-html2canvas-ignore="true">Aksi</th></tr>
+                        </thead>
+                        <tbody id="report-trx-tbody" class="font-bold"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="report-content-rekap" class="hidden flex-1 flex flex-col min-h-0 px-4 md:px-0">
+                <h3 class="font-extrabold text-lg mb-3 text-slate-700 flex items-center gap-2 shrink-0"><i class="fas fa-chart-pie text-brand-500"></i> Rekapitulasi Penjualan per Produk</h3>
+                <div class="flex-1 overflow-x-auto overflow-y-auto bg-white lg:rounded-2xl border-t border-b lg:border border-slate-200 mb-6 text-slate-800 min-h-[250px] relative custom-scroll lg:shadow-inner -mx-4 lg:mx-0">
+                    <table class="w-full text-left whitespace-nowrap text-sm text-slate-800">
+                        <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr><th class="py-3 px-3 md:px-5">Nama Produk</th><th class="py-3 px-3 md:px-5 text-center">Total Terjual (Pcs)</th><th class="py-3 px-3 md:px-5 text-right">Total Pendapatan (Rp)</th></tr>
+                        </thead>
+                        <tbody id="report-rekap-tbody" class="font-bold"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="report-content-kas" class="hidden flex-1 flex flex-col min-h-0 px-4 md:px-0">
+                <div class="bg-red-50 p-5 rounded-2xl border border-red-200 mb-6 shrink-0 flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-black text-red-500 uppercase tracking-widest mb-1">Total Pengeluaran Laci</p>
+                        <h4 class="text-2xl font-black text-red-600 truncate" id="rep-total-kas">Rp 0</h4>
+                    </div>
+                    <i class="fas fa-wallet text-4xl text-red-200"></i>
+                </div>
+                <h3 class="font-extrabold text-lg mb-3 text-red-500 flex items-center gap-2 shrink-0"><i class="fas fa-money-bill-transfer"></i> Log Kas Keluar Laci</h3>
+                <div class="flex-1 overflow-x-auto overflow-y-auto bg-white lg:rounded-2xl border-t border-b lg:border border-slate-200 text-slate-800 min-h-0 relative custom-scroll lg:shadow-inner -mx-4 lg:mx-0">
+                    <table class="w-full text-left whitespace-nowrap text-sm text-slate-800">
+                        <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr><th class="py-3 px-3 md:px-5">Waktu</th><th class="py-3 px-3 md:px-5">Cabang & Kasir</th><th class="py-3 px-3 md:px-5">Keterangan</th><th class="py-3 px-3 md:px-5 text-right">Nominal Pengeluaran</th></tr>
+                        </thead>
+                        <tbody id="report-kas-tbody" class="font-bold"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="report-content-selisih" class="hidden flex-1 flex flex-col min-h-0 px-4 md:px-0">
+                <h3 class="font-extrabold text-lg mb-3 text-purple-600 flex items-center gap-2 shrink-0"><i class="fas fa-clipboard-check"></i> Riwayat Audit Opname</h3>
+                <div class="flex-1 overflow-x-auto overflow-y-auto bg-white lg:rounded-2xl border-t border-b lg:border border-slate-200 text-slate-800 min-h-0 relative custom-scroll lg:shadow-inner -mx-4 lg:mx-0">
+                    <table class="w-full text-left whitespace-nowrap text-sm text-slate-800">
+                        <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr><th class="py-3 px-3 md:px-5">Waktu Opname</th><th class="py-3 px-3 md:px-5">Barang</th><th class="py-3 px-3 md:px-5">Cabang & Kasir</th><th class="py-3 px-3 md:px-5 text-center">Sys vs Fisik</th><th class="py-3 px-3 md:px-5 text-right">Selisih</th><th class="py-3 px-3 md:px-5 text-center">Status Audit</th></tr>
+                        </thead>
+                        <tbody id="report-selisih-tbody" class="font-bold"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="report-content-bom" class="hidden flex-1 flex flex-col min-h-0 px-4 md:px-0">
+                <div class="flex justify-between items-center mb-4 shrink-0">
+                    <h3 class="font-extrabold text-lg text-slate-700 flex items-center gap-2"><i class="fas fa-boxes-stacked text-brand-500"></i> Analisis Pemakaian Bahan</h3>
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 p-1 rounded-xl shadow-sm">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-2">Periode:</span>
+                        <input type="month" id="bom-filter-month" class="bg-white border-none rounded-lg px-3 py-1.5 text-xs font-bold outline-none cursor-pointer text-slate-700" onchange="superApp.renderBOMReport()">
+                    </div>
+                </div>
+                <div class="flex-1 overflow-x-auto overflow-y-auto bg-white lg:rounded-2xl border-t border-b lg:border border-slate-200 text-slate-800 min-h-[250px] relative custom-scroll lg:shadow-inner mb-6 -mx-4 lg:mx-0">
+                    <div class="bg-brand-50 border-b border-brand-100 p-3 sticky top-0 z-20"><h4 class="font-black text-brand-700 text-xs uppercase tracking-widest">A. Produk / Bahan Utama</h4></div>
+                    <table class="w-full text-left whitespace-nowrap text-sm text-slate-800">
+                        <thead class="text-slate-500 border-b border-slate-200 sticky top-10 bg-slate-50 z-10 shadow-sm">
+                            <tr>
+                                <th class="py-3 px-3 md:px-5">Nama Produk</th>
+                                <th class="py-3 px-3 md:px-5 text-center text-emerald-600 bg-emerald-50/50">Penerimaan Masuk</th>
+                                <th class="py-3 px-3 md:px-5 text-center text-brand-600 bg-brand-50/50">Pemakaian (Terjual)</th>
+                                <th class="py-3 px-3 md:px-5 text-center">Sisa Stok Fisik</th>
+                                <th class="py-3 px-3 md:px-5 text-center">Deviasi (Selisih)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bom-bahan-tbody" class="font-bold"></tbody>
+                    </table>
+                </div>
+                <div class="flex-1 overflow-x-auto overflow-y-auto bg-white lg:rounded-2xl border-t border-b lg:border border-slate-200 text-slate-800 min-h-[200px] relative custom-scroll lg:shadow-inner -mx-4 lg:mx-0">
+                    <div class="bg-slate-100 border-b border-slate-200 p-3 sticky top-0 z-20"><h4 class="font-black text-slate-600 text-xs uppercase tracking-widest">B. Barang Pendukung & Plastik</h4></div>
+                    <table class="w-full text-left whitespace-nowrap text-sm text-slate-800">
+                        <thead class="text-slate-500 border-b border-slate-200 sticky top-10 bg-slate-50 z-10 shadow-sm">
+                            <tr>
+                                <th class="py-3 px-3 md:px-5">Nama Barang</th>
+                                <th class="py-3 px-3 md:px-5 text-center text-emerald-600 bg-emerald-50/50">Penerimaan Masuk</th>
+                                <th class="py-3 px-3 md:px-5 text-center text-brand-600 bg-brand-50/50">Pemakaian (Terjual)</th>
+                                <th class="py-3 px-3 md:px-5 text-center">Sisa Stok Fisik</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bom-pendukung-tbody" class="font-bold"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+      </div>
+
+      <div id="view-ai" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-20 md:pb-0">
+        <div class="bg-slate-50 p-4 lg:p-6 rounded-[2rem] shadow-sm border border-slate-100 text-slate-800 flex flex-col h-full min-h-0 relative">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b border-slate-200 pb-4 shrink-0 gap-4 bg-white p-4 rounded-2xl shadow-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl flex items-center justify-center text-brand-400 text-2xl shadow-[0_8px_20px_rgba(0,0,0,0.2)] shrink-0">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-xl lg:text-2xl text-slate-800 tracking-tight">Dashboard Owner</h3>
+                        <p class="text-[10px] lg:text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">Analitik Real-time & Tren Penjualan</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <input type="date" id="ai-filter-start" class="flex-1 md:w-auto border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 font-bold text-xs md:text-sm outline-none shadow-inner focus:border-brand-500 focus:bg-white text-slate-700 transition" onchange="superApp.generateAIReport()">
+                        <span class="text-slate-400 font-bold text-xs">s/d</span>
+                        <input type="date" id="ai-filter-end" class="flex-1 md:w-auto border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 font-bold text-xs md:text-sm outline-none shadow-inner focus:border-brand-500 focus:bg-white text-slate-700 transition" onchange="superApp.generateAIReport()">
+                    </div>
+                    <select id="ai-filter-outlet" class="w-full md:flex-1 md:w-auto border-2 border-slate-100 bg-slate-50 rounded-xl px-4 py-3 font-bold text-xs md:text-sm outline-none shadow-inner focus:border-brand-500 focus:bg-white text-slate-800 transition mt-2 md:mt-0" onchange="superApp.generateAIReport()"></select>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll pr-1 pb-4">
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6">
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-slate-100 text-6xl opacity-50"><i class="fas fa-users"></i></div>
+                        <div class="flex justify-between items-center mb-2 relative z-10"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pengunjung</p></div>
+                        <h4 class="text-3xl lg:text-4xl font-black text-slate-800 relative z-10" id="ai-tot-visitor">0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-brand-50 text-6xl opacity-50"><i class="fas fa-wallet"></i></div>
+                        <div class="flex justify-between items-center mb-2 relative z-10"><p class="text-[10px] font-black text-brand-400 uppercase tracking-widest">Total Omset</p></div>
+                        <h4 class="text-2xl lg:text-3xl font-black text-brand-600 truncate relative z-10" id="ai-tot-omset">Rp 0</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-blue-50 text-6xl opacity-50"><i class="fas fa-fire"></i></div>
+                        <div class="flex justify-between items-center mb-2 relative z-10"><p class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Produk Terlaris</p></div>
+                        <h4 class="text-base lg:text-lg font-black text-blue-600 leading-snug line-clamp-2 mt-1 relative z-10" id="ai-top-menu">-</h4>
+                    </div>
+                    <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-[0_4px_15px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:-translate-y-1 transition relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 text-emerald-50 text-6xl opacity-50"><i class="fas fa-money-check"></i></div>
+                        <div class="flex justify-between items-center mb-2 relative z-10"><p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Metode Favorit</p></div>
+                        <h4 class="text-lg lg:text-xl font-black text-emerald-600 truncate mt-1 relative z-10" id="ai-top-payment">-</h4>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] mb-6 overflow-hidden">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-full bg-cyan-50 text-cyan-500 flex items-center justify-center"><i class="fas fa-store"></i></div>
+                        <h4 class="font-extrabold text-slate-700 text-sm uppercase tracking-wide">Komparasi Performa Antar Cabang</h4>
+                    </div>
+                    <div class="overflow-x-auto custom-scroll pb-2">
+                        <table class="w-full text-left whitespace-nowrap text-sm">
+                            <thead class="text-slate-400 border-b border-slate-200">
+                                <tr>
+                                    <th class="pb-3 px-4 font-bold uppercase tracking-widest text-[10px]">Nama Cabang</th>
+                                    <th class="pb-3 px-4 font-bold uppercase tracking-widest text-[10px] text-right">Omset (Rp)</th>
+                                    <th class="pb-3 px-4 font-bold uppercase tracking-widest text-[10px] text-center">Struk</th>
+                                    <th class="pb-3 px-4 font-bold uppercase tracking-widest text-[10px] w-64 text-center">QRIS vs Tunai</th>
+                                    <th class="pb-3 px-4 font-bold uppercase tracking-widest text-[10px] text-center">Menu Terlaris</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ai-comparison-tbody" class="divide-y divide-slate-100 font-bold text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6 mb-6">
+                    <div class="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col h-full min-h-[300px]">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-500 flex items-center justify-center"><i class="fas fa-clock"></i></div>
+                            <h4 class="font-extrabold text-slate-700 text-sm uppercase tracking-wide">Tren Jam Sibuk</h4>
+                        </div>
+                        <div id="ai-hourly-chart" class="flex-1 space-y-4 flex flex-col justify-center"></div>
+                    </div>
+                    <div class="flex flex-col gap-4 lg:gap-6">
+                        <div class="bg-gradient-to-br from-brand-500 to-cyan-500 rounded-[2rem] p-6 shadow-[0_8px_25px_rgba(14,165,233,0.3)] text-white flex-1 flex flex-col justify-center relative overflow-hidden group">
+                            <div class="absolute right-0 bottom-0 opacity-10 text-9xl translate-x-4 translate-y-4 group-hover:scale-110 transition-transform duration-700"><i class="fas fa-robot"></i></div>
+                            <h4 class="font-black text-sm uppercase tracking-widest text-brand-100 mb-3 flex items-center gap-2 relative z-10"><i class="fas fa-lightbulb text-yellow-300"></i> Kesimpulan AI</h4>
+                            <div id="ai-insight-text" class="text-sm font-bold leading-relaxed opacity-95 relative z-10"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-100 rounded-[2rem] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] overflow-hidden">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-red-50 text-red-500 flex items-center justify-center relative shrink-0">
+                                <i class="fas fa-radar relative z-10"></i>
+                                <div class="absolute inset-0 bg-red-400 rounded-full animate-ping opacity-20"></div>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-slate-800 text-sm md:text-base uppercase tracking-wide">Radar Prediksi Umur Stok</h4>
+                                <p class="text-[10px] text-slate-400 font-bold mt-0.5">Analisis kecepatan habis (Burn-Rate) harian.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto custom-scroll pb-2">
+                        <table class="w-full text-left whitespace-nowrap text-sm">
+                            <thead class="text-slate-500 border-b border-slate-200 bg-slate-50">
+                                <tr>
+                                    <th class="py-4 px-4 font-extrabold uppercase tracking-widest text-[10px] rounded-tl-xl">Cabang</th>
+                                    <th class="py-4 px-4 font-extrabold uppercase tracking-widest text-[10px]">Item / Bahan Baku</th>
+                                    <th class="py-4 px-4 font-extrabold uppercase tracking-widest text-[10px] text-center">Avg. Keluar/Hari</th>
+                                    <th class="py-4 px-4 font-extrabold uppercase tracking-widest text-[10px] text-right">Sisa Fisik</th>
+                                    <th class="py-4 px-4 font-extrabold uppercase tracking-widest text-[10px] text-center">Prediksi Habis</th>
+                                    <th class="py-4 px-4 font-extrabold uppercase tracking-widest text-[10px] text-center rounded-tr-xl">Tindakan Cepat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ai-predictive-tbody" class="divide-y divide-slate-100 font-bold text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+      </div>
+
+      <div id="view-gudang" class="app-view hidden flex-col lg:flex-row lg:min-h-[80vh] lg:items-start min-h-max gap-6 pb-24 md:pb-0">
+        <div class="flex-1 bg-white p-5 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col min-h-[50vh] lg:min-h-0 relative overflow-hidden group">
+            <i class="fas fa-warehouse absolute top-0 right-0 -mt-6 -mr-8 text-9xl text-slate-50 opacity-70 pointer-events-none transition-transform duration-700 group-hover:scale-110 z-0"></i>
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b border-slate-100 pb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-200/50">
+                        <i class="fas fa-boxes-stacked"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-xl text-slate-800 tracking-tight">Gudang Pusat</h3>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Master Data Stok Induk</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 w-full lg:w-auto">
+                    <button onclick="superApp.openCrudBahan()" class="flex-1 lg:flex-none bg-slate-900 text-white px-5 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:bg-slate-800 shadow-[0_8px_15px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                        <i class="fas fa-plus"></i> Produk Baru
+                    </button>
+                    <button onclick="superApp.openRestokModal()" class="flex-1 lg:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-5 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:from-emerald-600 hover:to-teal-600 shadow-[0_8px_15px_rgba(16,185,129,0.25)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                        <i class="fas fa-truck-loading"></i> Restok Pusat
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scroll relative flex flex-col z-10 pr-2">
+                <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm pt-2 pb-3 border-b border-slate-100 mb-2">
+                    <h4 class="font-black text-slate-800 text-sm flex items-center gap-2 border-l-4 border-emerald-500 pl-3 uppercase tracking-widest">
+                        <i class="fas fa-box-open text-emerald-500"></i> Daftar Produk (Es Kristal & Balok)
+                    </h4>
+                </div>
+                <table class="w-full text-left text-sm mb-8">
+                    <thead class="text-slate-400 border-b border-slate-200">
+                        <tr>
+                            <th class="pb-3 px-4 whitespace-nowrap font-bold uppercase tracking-widest text-[10px]">Nama Produk</th>
+                            <th class="pb-3 px-4 text-right whitespace-nowrap font-bold uppercase tracking-widest text-[10px]">Stok Pusat</th>
+                            <th class="pb-3 px-4 text-center whitespace-nowrap font-bold uppercase tracking-widest text-[10px]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gudang-tbody-utama" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody>
+                </table>
+                <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-sm pt-2 pb-3 border-b border-slate-100 mb-2">
+                    <h4 class="font-black text-slate-800 text-sm flex items-center gap-2 border-l-4 border-slate-400 pl-3 uppercase tracking-widest">
+                        <i class="fas fa-pump-soap text-slate-400"></i> Barang Pendukung (Plastik)
+                    </h4>
+                </div>
+                <table class="w-full text-left text-sm">
+                    <thead class="text-slate-400 border-b border-slate-200">
+                        <tr>
+                            <th class="pb-3 px-4 whitespace-nowrap font-bold uppercase tracking-widest text-[10px]">Nama Plastik</th>
+                            <th class="pb-3 px-4 text-right whitespace-nowrap font-bold uppercase tracking-widest text-[10px]">Sisa Pusat</th>
+                            <th class="pb-3 px-4 text-center whitespace-nowrap font-bold uppercase tracking-widest text-[10px]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gudang-tbody-pendukung" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="flex-1 bg-white p-5 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col min-h-[50vh] lg:min-h-0 relative overflow-hidden group">
+            <i class="fas fa-cube absolute top-0 right-0 -mt-6 -mr-6 text-9xl text-slate-50 opacity-70 pointer-events-none transition-transform duration-700 group-hover:scale-110 z-0"></i>
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-5 mb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-cyan-500 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg shadow-cyan-200/50">
+                        <i class="fas fa-list-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-xl text-slate-800 tracking-tight">Master Menu Jualan</h3>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Varian Layar POS</p>
+                    </div>
+                </div>
+                <button onclick="superApp.openCrudMasterMenu('add')" class="w-full lg:w-auto bg-gradient-to-r from-brand-500 to-cyan-500 text-white px-5 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:from-brand-600 hover:to-cyan-600 shadow-[0_8px_15px_rgba(14,165,233,0.25)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                    <i class="fas fa-plus"></i> Menu Baru
+                </button>
+            </div>
+            <div class="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scroll relative z-10 pr-2">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="text-slate-400 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm z-20 shadow-sm">
+                        <tr>
+                            <th class="py-3 px-4 font-bold uppercase tracking-widest text-[10px]">Nama Menu (POS)</th>
+                            <th class="py-3 px-4 font-bold uppercase tracking-widest text-[10px]">Potong Produk (BOM)</th>
+                            <th class="py-3 px-4 text-center font-bold uppercase tracking-widest text-[10px]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="master-tbody" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <div id="view-outlet" class="app-view hidden flex-col lg:flex-row lg:items-start lg:min-h-[80vh] min-h-max gap-6 pb-6">
+        <div class="flex-1 bg-white p-5 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col min-h-[40vh] lg:min-h-0 relative overflow-hidden group">
+            <i class="fas fa-store-alt absolute top-0 right-0 -mt-6 -mr-8 text-9xl text-slate-50 opacity-70 pointer-events-none transition-transform duration-700 group-hover:scale-110 z-0"></i>
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-5 mb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg shadow-indigo-200/50 shrink-0">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-xl text-slate-800 tracking-tight">Daftar Cabang</h3>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Manajemen Lokasi Aice Kristal</p>
+                    </div>
+                </div>
+                <button onclick="superApp.openCrudOutlet('add')" class="w-full lg:w-auto bg-slate-900 text-white px-5 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:bg-slate-800 shadow-[0_8px_15px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                    <i class="fas fa-plus"></i> Outlet Baru
+                </button>
+            </div>
+            <div class="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scroll relative z-10 pr-2 pb-28 md:pb-2">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="text-slate-400 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm z-20 shadow-sm">
+                        <tr>
+                            <th class="py-3 px-4 font-bold uppercase tracking-widest text-[10px]">ID Cabang</th>
+                            <th class="py-3 px-4 font-bold uppercase tracking-widest text-[10px]">Nama Outlet</th>
+                            <th class="py-3 px-4 text-center font-bold uppercase tracking-widest text-[10px]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="crud-outlet-tbody" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="flex-1 lg:flex-[1.5] bg-white p-5 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col min-h-[50vh] lg:min-h-0 relative overflow-hidden group">
+            <i class="fas fa-network-wired absolute top-0 right-0 -mt-6 -mr-6 text-9xl text-slate-50 opacity-70 pointer-events-none transition-transform duration-700 group-hover:scale-110 z-0"></i>
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-5 mb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-cyan-500 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg shadow-cyan-200/50 shrink-0">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-xl text-slate-800 tracking-tight">Distribusi & Harga</h3>
+                        <p class="text-[11px] font-bold text-brand-500 mt-1 flex items-center gap-1.5 uppercase tracking-widest">
+                            <i class="fas fa-location-dot"></i> Cabang Aktif: <span id="label-outlet-manage" class="bg-brand-50 text-brand-700 px-2 py-0.5 rounded-md border border-brand-200 font-black normal-case tracking-normal"></span>
+                        </p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                    <button onclick="superApp.openAddOutletProduct()" class="flex-1 lg:flex-none bg-slate-900 text-white px-4 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:bg-slate-800 shadow-[0_8px_15px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                        <i class="fas fa-plus text-slate-400"></i> Jual Menu
+                    </button>
+                    <button onclick="superApp.openDistribusiModal()" class="flex-1 lg:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:from-emerald-600 hover:to-teal-600 shadow-[0_8px_15px_rgba(16,185,129,0.25)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                        <i class="fas fa-truck-fast text-emerald-100"></i> Suplai Pusat
+                    </button>
+                    <button onclick="superApp.openTransferModalOwner()" class="flex-1 lg:flex-none bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-3 rounded-xl text-xs md:text-sm font-extrabold hover:from-blue-600 hover:to-indigo-600 shadow-[0_8px_15px_rgba(59,130,246,0.25)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-2">
+                        <i class="fas fa-exchange-alt text-blue-100"></i> Transfer
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-x-auto overflow-y-auto min-h-0 custom-scroll relative z-10 pr-2 pb-28 md:pb-2">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="text-slate-400 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm z-20 shadow-sm">
+                        <tr>
+                            <th class="py-3 px-4 font-bold uppercase tracking-widest text-[10px]">Menu Jualan</th>
+                            <th class="py-3 px-4 text-right font-bold uppercase tracking-widest text-[10px]">Harga Cabang</th>
+                            <th class="py-3 px-4 text-right font-bold uppercase tracking-widest text-[10px]">Stok Toko</th>
+                            <th class="py-3 px-4 text-center font-bold uppercase tracking-widest text-[10px]">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="outlet-manage-tbody" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+
+      <div id="view-staf" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-20 md:pb-0">
+        <div class="bg-white p-4 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 text-slate-800 flex flex-col h-full min-h-0">
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b border-slate-100 pb-4 gap-4 shrink-0">
+                <div class="flex items-center gap-4 shrink-0">
+                    <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center text-white text-3xl shadow-lg shadow-red-200"><i class="fas fa-user-shield"></i></div>
+                    <div><h3 class="font-extrabold text-2xl text-slate-800">Audit Kinerja Staf</h3><p class="text-sm font-medium text-slate-500 mt-1">Radar SOP, void struk, dan akurasi kasir.</p></div>
+                </div>
+                <div class="flex flex-wrap gap-2 w-full lg:w-auto items-center">
+                    <input type="date" id="filter-start-staf" class="flex-1 md:w-auto border-2 border-slate-200 rounded-xl px-3 py-2.5 font-bold text-sm outline-none shadow-sm focus:border-brand-500 text-slate-700 transition" onchange="superApp.renderStaf()">
+                    <span class="text-slate-400 font-bold hidden md:inline">-</span>
+                    <input type="date" id="filter-end-staf" class="flex-1 md:w-auto border-2 border-slate-200 rounded-xl px-3 py-2.5 font-bold text-sm outline-none shadow-sm focus:border-brand-500 text-slate-700 transition" onchange="superApp.renderStaf()">
+                    <select id="staf-filter-outlet" class="w-full md:w-auto border-2 border-slate-200 rounded-xl px-4 py-2.5 font-bold text-sm outline-none shadow-sm focus:border-brand-500 text-slate-800 transition mt-2 md:mt-0" onchange="superApp.renderStaf()"></select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 shrink-0 mb-6">
+                <div class="bg-rose-50 rounded-3xl p-5 border border-rose-100 flex flex-col justify-center relative overflow-hidden">
+                    <i class="fas fa-receipt absolute -right-4 -bottom-4 text-6xl text-rose-500 opacity-10"></i>
+                    <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-1 relative z-10">Struk Tidak Dicetak</p>
+                    <h4 class="font-black text-3xl text-rose-600 relative z-10" id="audit-tot-noprint">0</h4>
+                </div>
+                <div class="bg-amber-50 rounded-3xl p-5 border border-amber-100 flex flex-col justify-center relative overflow-hidden">
+                    <i class="fas fa-ban absolute -right-4 -bottom-4 text-6xl text-amber-500 opacity-10"></i>
+                    <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1 relative z-10">Transaksi Batal / Void</p>
+                    <h4 class="font-black text-3xl text-amber-600 relative z-10" id="audit-tot-void">0</h4>
+                </div>
+                <div class="bg-blue-50 rounded-3xl p-5 border border-blue-100 flex flex-col justify-center relative overflow-hidden">
+                    <i class="fas fa-boxes-packing absolute -right-4 -bottom-4 text-6xl text-blue-500 opacity-10"></i>
+                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1 relative z-10">Deviasi Opname Fisik</p>
+                    <h4 class="font-black text-3xl text-blue-600 relative z-10" id="audit-tot-deviasi">0</h4>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-x-auto overflow-y-auto bg-white rounded-2xl border border-slate-200 min-h-[300px] lg:min-h-0 relative custom-scroll shadow-inner">
+                <table class="w-full text-left whitespace-nowrap text-sm">
+                    <thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-100 z-10 shadow-sm">
+                        <tr>
+                            <th class="py-4 px-5">Nama Staf & Cabang</th>
+                            <th class="py-4 px-5 text-center">Rasio Cetak Struk</th>
+                            <th class="py-4 px-5 text-center">Batal / Void</th>
+                            <th class="py-4 px-5 text-center">Akurasi Opname</th>
+                            <th class="py-4 px-5 text-center">Status Integritas</th>
+                            <th class="py-4 px-5 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staf-detail-tbody" class="font-bold divide-y divide-slate-100"></tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="modal-system-settings" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4 lg:p-6 transition-opacity">
+    <div class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90dvh] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-100 modal-enter relative" id="modal-system-settings-content">
+        <div class="absolute top-0 right-0 -mt-12 -mr-12 text-9xl text-slate-50 opacity-80 pointer-events-none z-0"><i class="fas fa-cog"></i></div>
+        <div class="bg-white/90 backdrop-blur-sm px-6 lg:px-8 py-6 border-b border-slate-100 flex justify-between items-center shrink-0 relative z-10">
+            <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-gradient-to-br from-slate-800 to-black rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-slate-300/50"><i class="fas fa-sliders-h"></i></div>
+                <div>
+                    <h3 class="font-extrabold text-slate-800 text-xl tracking-tight">Pengaturan</h3>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Personalisasi Sistem POS</p>
+                </div>
+            </div>
+            <button onclick="superApp.closeModal('modal-system-settings')" class="w-10 h-10 bg-slate-50 hover:bg-rose-50 hover:text-rose-500 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm active:scale-90"><i class="fas fa-times text-lg"></i></button>
+        </div>
+
+        <div class="p-6 lg:p-8 flex flex-col gap-5 overflow-y-auto custom-scroll relative z-10 bg-slate-50/50">
+            <div class="bg-white border border-slate-200 rounded-[1.5rem] p-5 lg:p-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-xl hover:shadow-indigo-100/60 hover:border-indigo-200 transition-all duration-300 group hover:-translate-y-1 gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-indigo-50 to-purple-50 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform border border-indigo-100/50 shrink-0"><i class="fas fa-palette"></i></div>
+                    <div><h4 class="font-extrabold text-slate-800 text-base">Tampilan Aplikasi</h4><p class="text-xs text-slate-500 font-medium mt-1">Ubah nuansa antarmuka (Gelap/Terang).</p></div>
+                </div>
+                <button onclick="superApp.toggleDarkMode()" class="w-full md:w-auto px-6 py-3.5 bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 hover:border-indigo-200 text-slate-700 font-bold rounded-xl text-xs lg:text-sm shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"><i class="fas fa-moon text-indigo-500"></i> Ganti Tema</button>
+            </div>
+
+            <div id="setting-card-standby" class="bg-white border border-slate-200 rounded-[1.5rem] p-5 lg:p-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-xl hover:shadow-blue-100/60 hover:border-blue-200 transition-all duration-300 group hover:-translate-y-1 gap-4 hidden">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-50 to-cyan-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform border border-blue-100/50 shrink-0"><i class="fas fa-tv"></i></div>
+                    <div><h4 class="font-extrabold text-slate-800 text-base">Layar Promo Standby</h4><p class="text-xs text-slate-500 font-medium mt-1 md:max-w-[220px]">Gambar layar CFD saat idle.</p></div>
+                </div>
+                <button onclick="superApp.changePromoImage('standby')" class="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-extrabold rounded-xl text-xs lg:text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"><i class="fas fa-upload"></i> Unggah</button>
+            </div>
+
+            <div id="setting-card-transaksi" class="bg-white border border-slate-200 rounded-[1.5rem] p-5 lg:p-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-xl hover:shadow-brand-100/60 hover:border-brand-200 transition-all duration-300 group hover:-translate-y-1 gap-4 hidden">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-brand-50 to-cyan-50 text-brand-500 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform border border-brand-100/50 shrink-0"><i class="fas fa-image"></i></div>
+                    <div><h4 class="font-extrabold text-slate-800 text-base">Layar Promo Transaksi</h4><p class="text-xs text-slate-500 font-medium mt-1 md:max-w-[220px]">Gambar saat kasir input pesanan.</p></div>
+                </div>
+                <button onclick="superApp.changePromoImage('transaksi')" class="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-brand-500 to-cyan-500 text-white font-extrabold rounded-xl text-xs lg:text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"><i class="fas fa-upload"></i> Unggah</button>
+            </div>
+
+            <div id="setting-card-struk" class="bg-white border border-slate-200 rounded-[1.5rem] p-5 lg:p-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-xl hover:shadow-emerald-100/60 hover:border-emerald-200 transition-all duration-300 group hover:-translate-y-1 gap-4 hidden">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 group-hover:rotate-6 transition-transform border border-emerald-100/50 shrink-0"><i class="fas fa-receipt"></i></div>
+                    <div><h4 class="font-extrabold text-slate-800 text-base">Receipt Builder</h4><p class="text-xs text-slate-500 font-medium mt-1 md:max-w-[220px]">Desain layout struk & variabel.</p></div>
+                </div>
+                <button onclick="superApp.openReceiptBuilder()" class="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold rounded-xl text-xs lg:text-sm shadow-[0_8px_15px_rgba(16,185,129,0.25)] transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"><i class="fas fa-pen-ruler"></i> Desain Visual</button>
+            </div>
+
+            <div id="setting-card-logo" class="bg-white border border-slate-200 rounded-[1.5rem] p-5 lg:p-6 flex flex-col md:flex-row justify-between items-start md:items-center shadow-sm hover:shadow-xl hover:shadow-emerald-100/60 hover:border-emerald-200 transition-all duration-300 group hover:-translate-y-1 gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-50 to-teal-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform border border-emerald-100/50 shrink-0"><i class="fas fa-building"></i></div>
+                    <div><h4 class="font-extrabold text-slate-800 text-base">Logo Global Aice</h4><p class="text-xs text-slate-500 font-medium mt-1 md:max-w-[220px]">Ubah logo seluruh cabang.</p></div>
+                </div>
+                <button onclick="superApp.changeAppLogo()" class="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-extrabold rounded-xl text-xs lg:text-sm shadow-md transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"><i class="fas fa-upload"></i> Unggah Logo</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div id="modal-forensic-audit" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4 lg:p-6 transition-opacity">
+        <div class="bg-white rounded-[2rem] w-full max-w-4xl max-h-[95dvh] flex flex-col shadow-2xl overflow-hidden border border-slate-100 modal-enter" id="modal-forensic-audit-content">
+            <div id="forensic-action-row" class="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center shrink-0">
+                <h3 class="font-extrabold text-slate-800 text-lg flex items-center gap-2"><i class="fas fa-file-search text-brand-500"></i> Detail Bukti Audit</h3>
+                <div class="flex gap-2">
+                    <button onclick="superApp.exportForensicPDF(document.getElementById('forensic-staff-name').innerText)" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md shadow-rose-200 transition active:scale-95 flex items-center gap-2"><i class="fas fa-file-pdf"></i> Cetak PDF</button>
+                    <button onclick="superApp.closeModal('modal-forensic-audit')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-bold transition active:scale-95"><i class="fas fa-times"></i> Tutup</button>
+                </div>
+            </div>
+            <div id="forensic-pdf-area" class="flex-1 overflow-y-auto custom-scroll p-6 md:p-10 bg-white relative">
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 overflow-hidden z-0"><h1 class="text-8xl font-black transform -rotate-45 text-slate-900">CONFIDENTIAL</h1></div>
+                <div class="relative z-10">
+                    <div class="text-center border-b-4 border-slate-800 pb-6 mb-8">
+                        <h1 class="text-2xl font-black uppercase tracking-widest text-slate-900 mb-1">Berita Acara Audit Integritas</h1>
+                        <p class="text-sm font-bold text-slate-600">Dokumen Internal Departemen HRD & Audit - Aice Kristal</p>
+                    </div>
+                    <div class="flex flex-col md:flex-row justify-between mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Nama Karyawan / Staf</p><h3 class="font-extrabold text-xl text-slate-800" id="forensic-staff-name">-</h3></div>
+                        <div class="mt-4 md:mt-0 md:text-right"><p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">Periode Audit</p><h3 class="font-extrabold text-lg text-slate-800" id="forensic-date-range">-</h3></div>
+                    </div>
+                    <div class="mb-8"><h4 class="font-black text-rose-600 mb-2 border-l-4 border-rose-500 pl-3 uppercase text-sm">1. Indikasi Manipulasi (Struk Tidak Dicetak)</h4><table class="w-full text-left text-sm border border-slate-200 rounded-lg overflow-hidden"><thead class="bg-rose-50 text-rose-800 border-b border-rose-100"><tr><th class="py-2 px-3">Waktu</th><th class="py-2 px-3">No. Resi</th><th class="py-2 px-3">Item Dipesan</th><th class="py-2 px-3 text-right">Nominal Masuk</th></tr></thead><tbody id="forensic-noprint-tbody" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody></table></div>
+                    <div class="mb-8"><h4 class="font-black text-amber-600 mb-2 border-l-4 border-amber-500 pl-3 uppercase text-sm">2. Riwayat Pembatalan (Void)</h4><table class="w-full text-left text-sm border border-slate-200 rounded-lg overflow-hidden"><thead class="bg-amber-50 text-amber-800 border-b border-amber-100"><tr><th class="py-2 px-3">Waktu</th><th class="py-2 px-3">No. Resi Batal</th><th class="py-2 px-3">Item Dipesan</th><th class="py-2 px-3 text-right">Potensi Nominal</th></tr></thead><tbody id="forensic-void-tbody" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody></table></div>
+                    <div class="mb-8"><h4 class="font-black text-blue-600 mb-2 border-l-4 border-blue-500 pl-3 uppercase text-sm">3. Kesalahan Fisik (Deviasi Opname)</h4><table class="w-full text-left text-sm border border-slate-200 rounded-lg overflow-hidden"><thead class="bg-blue-50 text-blue-800 border-b border-blue-100"><tr><th class="py-2 px-3">Waktu Opname</th><th class="py-2 px-3">Nama Barang</th><th class="py-2 px-3 text-center">Komparasi</th><th class="py-2 px-3 text-center">Selisih Fisik</th><th class="py-2 px-3">Catatan Staf</th></tr></thead><tbody id="forensic-opname-tbody" class="divide-y divide-slate-100 font-medium text-slate-700"></tbody></table></div>
+                </div>
+            </div>
+        </div>
+  </div>
+  
+  <div id="toast-container" class="fixed top-5 right-5 z-[999] flex flex-col gap-3 pointer-events-none"></div>
+
+  <div id="modal-outlet-selector" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4 lg:p-6 transition-opacity">
+        <div class="bg-white rounded-[2rem] w-full max-w-md flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-100 modal-enter" id="modal-outlet-selector-content">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 relative overflow-hidden">
+                <i class="fas fa-map-marked-alt absolute -right-4 -bottom-4 text-7xl text-slate-200 opacity-40 pointer-events-none"></i>
+                <div class="flex items-center gap-4 relative z-10">
+                    <div class="w-12 h-12 bg-gradient-to-br from-slate-800 to-black text-white rounded-2xl flex items-center justify-center text-xl shadow-lg shadow-slate-300/50"><i class="fas fa-store"></i></div>
+                    <div>
+                        <h3 class="font-black text-xl text-slate-800 tracking-tight">Lokasi Toko</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Pilih Cabang Aice</p>
+                    </div>
+                </div>
+                <button onclick="superApp.closeModal('modal-outlet-selector')" class="w-9 h-9 bg-white border border-slate-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-500 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm active:scale-90 relative z-10"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto max-h-[60vh] custom-scroll bg-slate-50" id="outlet-selector-list"></div>
+        </div>
+  </div>
+  
+  <div id="modal-shift" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[100] hidden flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl modal-enter text-center" id="modal-shift-content">
+      <div class="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"><i class="fas fa-clock"></i></div>
+      <h3 class="font-extrabold text-xl mb-2 text-slate-800">Mulai Shift Baru</h3>
+      <p class="text-slate-500 font-medium text-sm mb-2">User: <span id="shift-user-name" class="font-bold text-brand-500"></span></p>
+      <p class="text-slate-500 font-medium text-sm mb-6">Cabang: <span id="shift-outlet-name" class="font-bold text-brand-500"></span></p>
+      <div class="text-left mb-6">
+        <label class="text-xs font-bold text-slate-500 block mb-2 uppercase">Tim Operasional</label>
+        <div id="shift-staff-list" class="space-y-2 max-h-32 overflow-y-auto no-scrollbar border-y border-slate-100 py-2 mb-4"></div>
+        <label class="text-xs font-bold text-slate-500 block mb-2">Uang Modal Awal Laci (Rp)</label>
+        <input type="text" id="shift-modal-awal" readonly onclick="osKeyboard.open('shift-modal-awal', 'numeric')" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 outline-none focus:border-brand-500 bg-white transition cursor-pointer osk-trigger" data-type="numeric" placeholder="0" oninput="superApp.formatRupiahInput(this)">
+      </div>
+      <button onclick="superApp.executeBukaShift()" class="w-full bg-brand-500 text-white py-4 rounded-xl font-extrabold shadow-lg hover:bg-brand-600 transition mb-3">Buka Kasir Sekarang</button>
+      <button onclick="superApp.closeModal('modal-shift')" class="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold hover:bg-slate-200 transition text-sm">Lewati / Cek Menu Lain</button>
+    </div>
+  </div>
+
+  <div id="modal-kas-keluar" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[150] hidden flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl modal-enter text-slate-800" id="modal-kas-keluar-content">
+      <h3 class="font-extrabold text-xl mb-2 border-b pb-3">Input Kas Keluar</h3>
+      <div class="space-y-4 mb-6 mt-4">
+        <div>
+            <label class="text-xs font-bold text-slate-500 block mb-1">Nominal (Rp)</label>
+            <input type="text" id="kas-out-nominal" readonly onclick="osKeyboard.open('kas-out-nominal', 'numeric')" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 outline-none focus:border-red-500 bg-white transition cursor-pointer osk-trigger" oninput="superApp.formatRupiahInput(this)" placeholder="0">
+        </div>
+        <div>
+            <label class="text-xs font-bold text-slate-500 block mb-1">Keterangan Khusus</label>
+            <input type="text" id="kas-out-ket" readonly onclick="osKeyboard.open('kas-out-ket', 'text')" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 outline-none focus:border-red-500 bg-white transition cursor-pointer osk-trigger" placeholder="Cth: Bensin / Tambah Plastik">
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="superApp.closeModal('modal-kas-keluar')" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition">Batal</button>
+        <button onclick="superApp.executeKasKeluar()" class="flex-1 bg-red-500 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-red-600 transition">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-tutup-shift" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[150] hidden flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] w-full max-w-sm p-8 shadow-2xl modal-enter text-center text-slate-800" id="modal-tutup-shift-content">
+      <h3 class="font-extrabold text-xl mb-2">Tutup Laci & Rekap Shift</h3>
+      <div class="bg-slate-50 p-4 rounded-xl mb-6 mt-4 text-left border border-slate-200 shadow-inner">
+          <div class="flex justify-between mb-1"><span class="text-xs font-bold text-slate-500">Modal Awal</span><span class="text-xs font-black" id="ts-modal">Rp 0</span></div>
+          <div class="flex justify-between mb-1"><span class="text-xs font-bold text-slate-500">Sales Tunai</span><span class="text-xs font-black text-green-600" id="ts-sales">Rp 0</span></div>
+          <div class="flex justify-between mb-3"><span class="text-xs font-bold text-slate-500">Kas Keluar</span><span class="text-xs font-black text-red-500" id="ts-kasout">Rp 0</span></div>
+          <div class="flex justify-between border-t border-slate-200 pt-2"><span class="text-sm font-bold text-slate-800">Uang Laci (Sistem)</span><span class="text-sm font-black text-brand-600" id="ts-expected">Rp 0</span></div>
+      </div>
+      <div class="text-left mb-6">
+        <label class="text-xs font-bold text-slate-500 block mb-2">Setoran Fisik Laci (Uang Riil)</label>
+        <input type="text" id="shift-setoran-akhir" readonly onclick="osKeyboard.open('shift-setoran-akhir', 'numeric')" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-slate-800 outline-none focus:border-brand-500 bg-white transition cursor-pointer osk-trigger" oninput="superApp.formatRupiahInput(this)" placeholder="0">
+      </div>
+      <div class="flex gap-2">
+        <button onclick="superApp.closeModal('modal-tutup-shift')" class="flex-1 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold hover:bg-slate-200 transition">Batal</button>
+        <button onclick="superApp.executeTutupShift()" class="flex-1 bg-slate-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition">Akhiri Shift</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-payment" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[150] hidden flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-[2rem] w-full max-w-md max-h-[90dvh] p-5 md:p-6 shadow-2xl modal-enter text-slate-800 flex flex-col overflow-hidden border border-slate-100" id="modal-payment-content">
+        <div class="flex justify-between items-center mb-5 shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-50 text-brand-500 rounded-full flex items-center justify-center text-lg shadow-inner">
+                    <i class="fas fa-cash-register"></i>
+                </div>
+                <h3 class="font-extrabold text-xl bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500">Pembayaran</h3>
+            </div>
+            <button onclick="superApp.closeModal('modal-payment')" class="text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors w-8 h-8 flex items-center justify-center bg-slate-100 rounded-full">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar custom-scroll min-h-0 pb-2 pr-1">
+            <div class="bg-gradient-to-br from-brand-500 to-cyan-400 p-5 rounded-[1.5rem] mb-5 text-center shadow-[0_8px_20px_rgba(14,165,233,0.25)] relative overflow-hidden">
+                <div class="absolute top-0 right-0 opacity-10 text-6xl transform translate-x-3 -translate-y-2"><i class="fas fa-wallet"></i></div>
+                <p class="text-brand-100 font-bold text-[10px] uppercase tracking-widest mb-1 relative z-10">Total Tagihan</p>
+                <h2 class="text-3xl md:text-4xl font-black text-white drop-shadow-md relative z-10 tracking-tight" id="pay-total">Rp 0</h2>
+            </div>
+            <div class="mb-5">
+                <label class="text-[10px] font-black text-slate-400 block mb-2 uppercase tracking-widest ml-1">Metode Pembayaran</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button onclick="superApp.setPaymentMethod('Tunai')" id="btn-pay-tunai" class="py-2.5 border-2 border-brand-500 bg-brand-50 text-brand-600 rounded-xl font-bold transition shadow-sm flex items-center justify-center"><i class="fas fa-money-bill-wave mr-2 text-lg"></i>TUNAI</button>
+                    <button onclick="superApp.setPaymentMethod('QRIS')" id="btn-pay-qris" class="py-2.5 border-2 border-slate-200 bg-white text-slate-500 rounded-xl font-bold transition hover:border-blue-500 hover:text-blue-500 hover:bg-blue-50 shadow-sm flex items-center justify-center"><i class="fas fa-qrcode mr-2 text-lg"></i>QRIS</button>
+                </div>
+            </div>
+            <div id="tunai-section" class="animate-fade-in">
+                <label class="text-[10px] font-black text-slate-400 block mb-2 uppercase tracking-widest ml-1">Pecahan Cepat</label>
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                    <button onclick="superApp.addPayNumpad(10000)" class="py-2.5 border border-slate-200 rounded-xl font-bold bg-white text-slate-600 shadow-sm hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 hover:-translate-y-0.5 transition-all text-xs">10k</button>
+                    <button onclick="superApp.addPayNumpad(20000)" class="py-2.5 border border-slate-200 rounded-xl font-bold bg-white text-slate-600 shadow-sm hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 hover:-translate-y-0.5 transition-all text-xs">20k</button>
+                    <button onclick="superApp.addPayNumpad(50000)" class="py-2.5 border border-slate-200 rounded-xl font-bold bg-white text-slate-600 shadow-sm hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 hover:-translate-y-0.5 transition-all text-xs">50k</button>
+                    <button onclick="superApp.addPayNumpad(100000)" class="py-2.5 border border-slate-200 rounded-xl font-bold bg-white text-slate-600 shadow-sm hover:border-brand-500 hover:text-brand-600 hover:bg-brand-50 hover:-translate-y-0.5 transition-all text-xs">100k</button>
+                    <button onclick="superApp.setCash('pas')" class="col-span-4 py-2.5 border border-slate-200 rounded-xl font-extrabold bg-slate-800 text-white shadow-md hover:bg-slate-700 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 text-sm"><i class="fas fa-hand-holding-dollar"></i> UANG PAS</button>
+                </div>
+                <div class="flex items-center gap-2.5 mb-5 w-full">
+                    <div class="relative flex-1 min-w-0">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 font-bold text-sm">Rp</span>
+                        <input type="text" id="pay-cash-input" readonly onclick="osKeyboard.open('pay-cash-input', 'numeric')" class="w-full border-2 border-slate-200 bg-slate-50 rounded-xl pl-10 pr-4 py-3 font-black text-xl text-slate-800 outline-none focus:border-brand-500 focus:bg-white transition cursor-pointer text-right osk-trigger shadow-inner" oninput="superApp.formatRupiahInput(this); superApp.calcChange()" placeholder="0">
+                    </div>
+                    <button onclick="superApp.setCash(0)" class="px-4 py-3 bg-rose-50 text-rose-500 border border-rose-100 rounded-xl font-bold hover:bg-rose-100 transition shadow-sm whitespace-nowrap shrink-0 flex items-center gap-2 text-sm"><i class="fas fa-eraser"></i> Reset</button>
+                </div>
+                <div class="flex justify-between items-center bg-white p-4 rounded-xl mb-1 border-2 border-dashed border-slate-200 text-slate-800 relative">
+                    <div class="absolute -left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white border-r-2 border-slate-200 rounded-full"></div>
+                    <div class="absolute -right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white border-l-2 border-slate-200 rounded-full"></div>
+                    <span class="font-bold text-slate-500 uppercase tracking-widest text-[10px]">Kembalian</span>
+                    <span class="text-2xl font-black text-slate-800 tracking-tight" id="pay-change">Rp 0</span>
+                </div>
+            </div>
+        </div>
+        <div class="shrink-0 pt-4 border-t border-slate-100 mt-2">
+            <button onclick="superApp.executeCheckout()" class="w-full bg-gradient-to-r from-brand-500 to-cyan-500 text-white py-3.5 rounded-xl font-extrabold shadow-[0_8px_20px_rgba(14,165,233,0.3)] hover:from-brand-600 hover:to-cyan-600 active:scale-95 transition-all text-base tracking-wide flex items-center justify-center gap-2" id="btn-execute-pay"><i class="fas fa-print text-lg"></i> Selesaikan & Cetak</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="modal-detail" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl modal-enter text-slate-800" id="modal-detail-content">
+      <div class="flex justify-between items-center mb-4"><h3 class="font-extrabold text-lg">Detail Struk</h3><button onclick="superApp.closeModal('modal-detail')" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button></div>
+      <div id="detail-struk-body" class="bg-slate-50 p-5 rounded-xl text-sm font-mono text-slate-700 h-64 overflow-y-auto mb-5 border border-slate-200 custom-scroll shadow-inner"></div>
+      <div class="flex flex-col gap-2">
+        <button onclick="superApp.executeReprint()" class="w-full bg-slate-900 text-white py-3.5 rounded-xl font-extrabold shadow-sm hover:bg-slate-800 transition"><i class="fas fa-print mr-2"></i>Cetak Ulang</button>
+        <button onclick="superApp.promptVoidTrx()" id="btn-void-trx" class="w-full bg-white border-2 border-red-100 text-red-500 py-3.5 rounded-xl font-extrabold hover:bg-red-50 transition"><i class="fas fa-ban mr-2"></i>Batal (Admin PIN)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-form" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-md p-6 lg:p-8 shadow-2xl modal-enter overflow-y-auto max-h-[90vh] text-slate-800 custom-scroll" id="modal-form-content">
+      <div class="flex justify-between items-center mb-6"><h3 class="font-extrabold text-xl" id="modal-form-title">Form</h3><button onclick="superApp.closeModal('modal-form')" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button></div>
+      <div id="modal-form-body" class="space-y-4 text-slate-800"></div>
+      <button id="modal-form-btn" class="w-full bg-brand-500 text-white py-4 rounded-xl font-extrabold mt-6 shadow-lg hover:bg-brand-600 transition hover:-translate-y-1">Simpan Perubahan</button>
+    </div>
+  </div>
+
+  <div id="modal-wa-confirm" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[9999] hidden flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-[2.5rem] w-full max-w-sm p-8 shadow-2xl modal-enter text-center border-t-8 border-[#25D366]" id="modal-wa-confirm-content">
+      <div class="w-20 h-20 bg-green-100 text-[#25D366] rounded-full flex items-center justify-center text-5xl mx-auto mb-4 animate-bounce shadow-inner"><i class="fab fa-whatsapp"></i></div>
+      <h3 class="font-extrabold text-2xl mb-2 text-slate-800">Laporan Siap!</h3>
+      <p class="text-slate-500 font-medium text-sm mb-6">Data sudah tersimpan di sistem. Silakan lanjutkan pengiriman laporan ke Owner.</p>
+      <div class="flex flex-col gap-3">
+        <button id="btn-go-wa" class="w-full bg-[#25D366] text-white py-4 rounded-xl font-extrabold shadow-lg shadow-green-200 hover:bg-[#20bd5a] transition active:scale-95 text-lg flex items-center justify-center gap-2"><i class="fab fa-whatsapp text-2xl"></i> Buka WhatsApp</button>
+        <button id="btn-copy-wa" class="w-full bg-blue-50 text-blue-600 border-2 border-blue-200 py-3.5 rounded-xl font-bold hover:bg-blue-100 transition active:scale-95 text-sm flex items-center justify-center gap-2"><i class="fas fa-copy"></i> Salin Teks</button>
+        <button onclick="superApp.closeModal('modal-wa-confirm')" class="w-full bg-slate-100 text-slate-500 py-3 rounded-xl font-bold hover:bg-slate-200 transition text-sm mt-2">Selesai / Nanti Saja</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-wa-history" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-[200] hidden flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-[2rem] w-full max-w-2xl p-6 shadow-2xl modal-enter text-slate-800 flex flex-col max-h-[90vh]" id="modal-wa-history-content">
+      <div class="flex justify-between items-center mb-4 shrink-0"><h3 class="font-extrabold text-xl" id="wa-history-title">Riwayat Laporan WA</h3><button onclick="superApp.closeModal('modal-wa-history')" class="text-slate-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button></div>
+      <div class="flex-1 overflow-y-auto custom-scroll min-h-0 bg-slate-50 border border-slate-200 rounded-xl p-2 shadow-inner">
+        <table class="w-full text-left whitespace-nowrap text-sm"><thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-50 z-10 shadow-sm"><tr><th class="py-3 px-4">Waktu Lapor</th><th class="py-3 px-4">Kasir</th><th class="py-3 px-4 text-center">Total Item</th><th class="py-3 px-4 text-center">Aksi</th></tr></thead><tbody id="wa-history-tbody" class="font-bold divide-y divide-slate-200"></tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div id="virtual-keyboard-overlay" class="fixed inset-0 z-[9998] hidden bg-transparent" onclick="osKeyboard.close()"></div>
+  <div id="virtual-keyboard" class="fixed bottom-0 left-0 w-full bg-slate-100/95 backdrop-blur-3xl border-t border-slate-200/50 p-2 sm:p-4 shadow-[0_-20px_50px_rgba(0,0,0,0.15)] z-[9999] transition-transform transform translate-y-full flex flex-col hidden pb-6 sm:pb-8 rounded-t-[1.5rem] sm:rounded-t-[2rem]">
+    <div class="flex justify-center w-full mb-3 md:mb-5"><div class="w-10 sm:w-16 h-1.5 bg-slate-300 rounded-full cursor-pointer" onclick="osKeyboard.close()"></div></div>
+    <div id="vk-keys" class="w-full"></div>
+  </div>
+
+  <div class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 shadow-[0_-10px_30px_rgba(0,0,0,0.08)] flex justify-around p-2 pb-safe md:hidden z-[60]" id="bottom-nav-bar">
+      <button onclick="superApp.switchMenu('pos')" class="flex flex-col items-center justify-center p-2 text-brand-500 w-full nav-mobile-btn transition-colors" data-target="pos"><i class="fas fa-cash-register text-xl mb-1"></i><span class="text-[9px] font-extrabold tracking-wide">POS</span></button>
+      <button onclick="superApp.switchMenu('terima')" class="flex flex-col items-center justify-center p-2 text-slate-400 w-full hover:text-brand-500 nav-mobile-btn transition-colors" data-target="terima"><i class="fas fa-boxes-packing text-xl mb-1"></i><span class="text-[9px] font-extrabold tracking-wide">Terima</span></button>
+      <button onclick="superApp.switchMenu('opname')" class="flex flex-col items-center justify-center p-2 text-slate-400 w-full hover:text-brand-500 nav-mobile-btn transition-colors" data-target="opname"><i class="fas fa-clipboard-check text-xl mb-1"></i><span class="text-[9px] font-extrabold tracking-wide">Opname</span></button>
+      <button onclick="superApp.toggleSidebar()" class="flex flex-col items-center justify-center p-2 text-slate-400 w-full hover:text-brand-500 transition-colors"><i class="fas fa-bars text-xl mb-1"></i><span class="text-[9px] font-extrabold tracking-wide">Menu</span></button>
+  </div>
+
+  <div id="modal-sync-center" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[200] hidden flex items-center justify-center p-4 lg:p-6 transition-opacity">
+        <div class="bg-white rounded-[2rem] w-full max-w-lg flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-100 modal-enter relative" id="modal-sync-center-content">
+            <i class="fas fa-cloud-arrow-up absolute top-0 right-0 -mt-10 -mr-10 text-9xl text-slate-50 opacity-80 pointer-events-none z-0"></i>
+            <div class="px-6 lg:px-8 py-6 border-b border-slate-100 flex justify-between items-center shrink-0 relative z-10 bg-white/90 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-200/50"><i class="fas fa-rotate" id="sync-center-icon"></i></div>
+                    <div><h3 class="font-extrabold text-slate-800 text-xl tracking-tight">Pusat Sinkronisasi</h3><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">Antrean Data Offline</p></div>
+                </div>
+                <button onclick="superApp.closeModal('modal-sync-center')" class="w-10 h-10 bg-slate-50 hover:bg-rose-50 hover:text-rose-500 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm active:scale-90"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="p-6 lg:p-8 flex flex-col gap-4 overflow-y-auto custom-scroll relative z-10 bg-slate-50/50 max-h-[50vh]" id="sync-queue-list"></div>
+            <div class="p-6 border-t border-slate-100 bg-white shrink-0 relative z-10">
+                <button id="btn-trigger-sync" onclick="superApp.executeVisualSync()" class="w-full bg-slate-900 text-white px-6 py-4 rounded-xl text-sm font-extrabold hover:bg-slate-800 shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all hover:-translate-y-1 active:translate-y-0 flex justify-center items-center gap-3"><i class="fas fa-cloud-arrow-up text-lg text-emerald-400"></i> Mulai Sinkronisasi</button>
+            </div>
+        </div>
+  </div>
+
+  <div id="modal-stok-detail" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[250] hidden flex items-end md:items-center justify-center p-0 md:p-6 transition-opacity">
+        <div class="bg-white rounded-t-[2rem] md:rounded-[2rem] w-full max-w-2xl max-h-[90dvh] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-100 modal-enter relative" id="modal-stok-detail-content">
+            <i class="fas fa-chart-line absolute top-0 right-0 -mt-8 -mr-8 text-9xl text-slate-50 opacity-80 pointer-events-none z-0"></i>
+            <div class="px-6 lg:px-8 py-6 border-b border-slate-100 flex justify-between items-start shrink-0 relative z-10 bg-white/90 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-200/50"><i class="fas fa-search-dollar"></i></div>
+                    <div><h3 class="font-black text-slate-800 text-xl tracking-tight" id="detail-stok-nama">Nama Barang</h3><p class="text-[10px] font-black text-blue-500 uppercase tracking-widest mt-0.5">Analisis Tren & Histori 7 Hari</p></div>
+                </div>
+                <button onclick="superApp.closeModal('modal-stok-detail')" class="w-10 h-10 bg-slate-50 hover:bg-rose-50 hover:text-rose-500 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm active:scale-90"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-3 gap-3 p-6 bg-slate-50/50 shrink-0 relative z-10 border-b border-slate-100">
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col items-center text-center"><span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Stok Saat Ini</span><span class="text-2xl font-black text-slate-800" id="detail-stok-now">0</span></div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col items-center text-center"><span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Avg Terjual/Hari</span><span class="text-2xl font-black text-orange-500" id="detail-stok-avg">0</span></div>
+                <div class="bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col items-center text-center"><span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status Kecepatan</span><span class="text-xs md:text-sm font-black px-2 py-1 rounded-md mt-1" id="detail-stok-status">Aman</span></div>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll relative z-10 bg-white">
+                <table class="w-full text-left text-sm whitespace-nowrap"><thead class="text-slate-400 border-b border-slate-200 sticky top-0 bg-white/95 backdrop-blur-sm shadow-sm z-20"><tr><th class="py-3 px-6 font-bold uppercase tracking-widest text-[10px]">Tanggal</th><th class="py-3 px-4 text-center font-bold uppercase tracking-widest text-[10px]">Terjual (POS)</th><th class="py-3 px-4 text-center font-bold uppercase tracking-widest text-[10px]">Masuk (Pusat)</th><th class="py-3 px-6 text-right font-bold uppercase tracking-widest text-[10px]">Info Opname</th></tr></thead><tbody id="detail-stok-tbody" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody></table>
+            </div>
+        </div>
+  </div>
+
+  <div id="modal-bom-detail" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[250] hidden flex items-end md:items-center justify-center p-0 md:p-6 transition-opacity">
+        <div class="bg-white rounded-t-[2rem] md:rounded-[2rem] w-full max-w-2xl max-h-[90dvh] flex flex-col shadow-[0_20px_60px_rgba(0,0,0,0.3)] overflow-hidden border border-slate-100 modal-enter relative" id="modal-bom-detail-content">
+            <i class="fas fa-boxes-stacked absolute top-0 right-0 -mt-8 -mr-8 text-9xl text-slate-50 opacity-80 pointer-events-none z-0"></i>
+            <div class="px-6 lg:px-8 py-6 border-b border-slate-100 flex justify-between items-start shrink-0 relative z-10 bg-white/90 backdrop-blur-sm">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gradient-to-br from-brand-500 to-orange-500 rounded-xl flex items-center justify-center text-white text-xl shadow-md"><i class="fas fa-search-plus"></i></div>
+                    <div><h3 class="font-black text-slate-800 text-lg tracking-tight" id="bom-detail-nama">Nama Barang</h3><p class="text-[10px] font-black text-brand-500 uppercase tracking-widest mt-0.5" id="bom-detail-title">Rincian Pemakaian</p></div>
+                </div>
+                <button onclick="superApp.closeModal('modal-bom-detail')" class="w-10 h-10 bg-slate-50 hover:bg-rose-50 hover:text-rose-500 rounded-full flex items-center justify-center text-slate-400 transition-colors shadow-sm active:scale-90"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scroll relative z-10 bg-white min-h-[300px]">
+                <table class="w-full text-left whitespace-nowrap text-sm text-slate-800"><thead class="text-slate-500 border-b border-slate-200 sticky top-0 bg-slate-50 z-20 shadow-sm"><tr id="bom-detail-thead"></tr></thead><tbody id="bom-detail-tbody" class="divide-y divide-slate-50 font-bold text-slate-700"></tbody></table>
+            </div>
+        </div>
+  </div>
+  
+  <div id="modal-giant-numpad" class="fixed inset-0 bg-white z-[9999] hidden flex-col transition-transform transform translate-y-full duration-300">
+      <div class="p-5 bg-brand-500 text-white flex justify-between items-center shadow-md shrink-0">
+          <h3 class="font-extrabold text-xl">Input Hitung Fisik</h3>
+          <button onclick="superApp.closeGiantNumpad()" class="text-white text-2xl w-10 h-10 flex items-center justify-center active:scale-90 transition"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="p-6 text-center flex-1 flex flex-col justify-center bg-slate-50">
+          <p class="text-sm font-bold text-slate-400 mb-1" id="gn-title">Nama Item</p>
+          <p class="text-xs text-brand-500 font-extrabold mb-6" id="gn-subtitle">Sistem: 0</p>
+          <div class="text-6xl font-black text-slate-800 mb-8 border-b-4 border-slate-200 pb-4 w-3/4 mx-auto" id="gn-display">0</div>
+          <div class="grid grid-cols-3 gap-3 md:gap-4 w-full max-w-sm mx-auto">
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('1')">1</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('2')">2</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('3')">3</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('4')">4</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('5')">5</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('6')">6</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('7')">7</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('8')">8</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('9')">9</button>
+              <button class="py-5 bg-red-50 text-red-500 text-2xl font-bold rounded-2xl active:bg-red-100 active:scale-95 transition border border-red-100" onclick="superApp.clearGiantNumpad()">C</button>
+              <button class="py-5 bg-white shadow-sm border border-slate-100 text-3xl font-bold rounded-2xl active:bg-slate-200 active:scale-95 transition" onclick="superApp.typeGiantNumpad('0')">0</button>
+              <button class="py-5 bg-slate-800 text-white text-2xl font-bold rounded-2xl active:bg-slate-900 active:scale-95 transition shadow-md" onclick="superApp.delGiantNumpad()"><i class="fas fa-backspace"></i></button>
+          </div>
+      </div>
+      <div class="p-5 shrink-0 bg-white shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+          <button onclick="superApp.saveGiantNumpad()" class="w-full bg-brand-500 text-white py-4 rounded-xl font-extrabold text-lg shadow-[0_8px_20px_rgba(14,165,233,0.3)] active:scale-95 transition">SELESAI</button>
+      </div>
+  </div>
+
+  <div id="modal-menu-guide" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[400] hidden flex-col items-center justify-center p-4 transition-opacity">
+    <div id="modal-menu-guide-content" class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl flex flex-col overflow-hidden border border-slate-200 modal-enter">
+        <div class="p-6 text-center pb-2">
+            <div id="guide-icon-container" class="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 border-[6px]">
+                <i id="guide-icon" class="fas fa-info"></i>
+            </div>
+            <h3 id="guide-title" class="font-black text-xl text-slate-800 mb-1">Panduan Menu</h3>
+        </div>
+        <div id="guide-content-body" class="px-6 pb-6 text-left"></div>
+        <div class="p-4 bg-slate-50 border-t border-slate-100">
+            <button onclick="superApp.closeModal('modal-menu-guide')" class="w-full py-3.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-black text-sm transition active:scale-95 shadow-md tracking-wider">SAYA MENGERTI</button>
+        </div>
+    </div>
+  </div>
+  
+  <div id="modal-receipt-builder" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[300] hidden flex-col items-center justify-center p-2 md:p-6 transition-opacity">
+        <div id="modal-receipt-builder-content" class="bg-slate-50 w-full max-w-6xl h-[95dvh] rounded-[2rem] shadow-2xl flex flex-col overflow-hidden border border-slate-700 modal-enter">
+            <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <button onclick="superApp.closeReceiptBuilder()" class="text-slate-400 hover:text-white mr-2 transition" title="Kembali ke Pengaturan"><i class="fas fa-arrow-left text-xl"></i></button>
+                    <div class="w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-emerald-400 border border-slate-700"><i class="fas fa-receipt"></i></div>
+                    <div><h3 class="font-black text-lg">Dynamic Receipt Builder</h3><p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Desain Visual Struk Printer Thermal</p></div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="superApp.closeReceiptBuilder()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition active:scale-95 hidden md:block"><i class="fas fa-times"></i> Batal</button>
+                    <button onclick="superApp.saveReceiptTemplate()" class="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-extrabold shadow-[0_4px_15px_rgba(16,185,129,0.3)] transition active:scale-95 flex items-center gap-2"><i class="fas fa-save"></i> SIMPAN DESAIN</button>
+                </div>
+            </div>
+            <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
+                <div class="w-full lg:w-72 bg-white border-r border-slate-200 flex flex-col shrink-0">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50"><h4 class="font-extrabold text-xs text-slate-600 uppercase tracking-widest">Tambahkan Elemen</h4></div>
+                    <div class="p-4 grid grid-cols-2 gap-2">
+                        <button onclick="superApp.addReceiptBlock('text')" class="py-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col items-center gap-2 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 transition text-slate-600 font-bold text-xs"><i class="fas fa-font text-lg"></i> Teks</button>
+                        <button onclick="superApp.addReceiptBlock('divider')" class="py-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col items-center gap-2 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 transition text-slate-600 font-bold text-xs"><i class="fas fa-minus text-lg"></i> Pemisah</button>
+                        <button onclick="superApp.addReceiptBlock('logo')" class="py-3 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col items-center gap-2 hover:bg-emerald-100 hover:text-emerald-700 transition text-emerald-600 font-bold text-xs relative group"><i class="fas fa-image text-lg"></i> Logo Baru<span class="absolute top-1 right-2 flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span></button>
+                        <button onclick="superApp.addReceiptBlock('qrcode')" class="py-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col items-center gap-2 hover:bg-brand-50 hover:border-brand-200 hover:text-brand-600 transition text-slate-600 font-bold text-xs"><i class="fas fa-qrcode text-lg"></i> QR Code</button>
+                    </div>
+                    <div class="p-4 border-t border-slate-100 bg-slate-50 flex-1 overflow-y-auto custom-scroll">
+                        <h4 class="font-extrabold text-[10px] text-slate-600 uppercase tracking-widest mb-3"><i class="fas fa-magic text-amber-500"></i> Variabel Otomatis</h4>
+                        <p class="text-[10px] text-slate-500 mb-3 leading-relaxed">Ketik kode ini di blok teks. Sistem akan mengubahnya otomatis:</p>
+                        <div class="space-y-2">
+                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm flex justify-between items-center"><code class="text-[10px] text-brand-600 font-black">{{nama_toko}}</code><span class="text-[9px] text-slate-400 font-bold">Nama Induk</span></div>
+                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm flex justify-between items-center"><code class="text-[10px] text-brand-600 font-black">{{cabang}}</code><span class="text-[9px] text-slate-400 font-bold">Outlet Aktif</span></div>
+                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm flex justify-between items-center"><code class="text-[10px] text-brand-600 font-black">{{kasir}}</code><span class="text-[9px] text-slate-400 font-bold">Nama Staf</span></div>
+                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm flex justify-between items-center"><code class="text-[10px] text-brand-600 font-black">{{no_resi}}</code><span class="text-[9px] text-slate-400 font-bold">ID Transaksi</span></div>
+                            <div class="bg-white p-2 rounded border border-slate-200 shadow-sm flex justify-between items-center"><code class="text-[10px] text-brand-600 font-black">{{waktu}}</code><span class="text-[9px] text-slate-400 font-bold">Tgl & Jam</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 bg-slate-200/50 flex justify-center overflow-y-auto custom-scroll p-6 shadow-inner relative" id="receipt-canvas-container">
+                    <div class="w-full max-w-[280px] md:max-w-[320px] bg-white shadow-xl min-h-[400px] flex flex-col text-black pb-10" style="border-image: repeating-linear-gradient(to right, #cbd5e1 0, #cbd5e1 10px, transparent 10px, transparent 20px) 3; border-top-width: 4px;" id="receipt-canvas"></div>
+                </div>
+                <div class="w-full lg:w-80 bg-white border-l border-slate-200 flex flex-col shrink-0">
+                    <div class="p-4 border-b border-slate-100 bg-slate-50"><h4 class="font-extrabold text-xs text-slate-600 uppercase tracking-widest"><i class="fas fa-sliders-h text-blue-500"></i> Pengaturan Blok</h4></div>
+                    <div class="flex-1 overflow-y-auto p-5 bg-white custom-scroll" id="receipt-inspector"></div>
+                </div>
+            </div>
+        </div>
+  </div>
+  
+  <script src="app.js?v=123"></script>
+
 </body>
 </html>
