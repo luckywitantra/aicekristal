@@ -956,12 +956,18 @@ const superApp = {
             const sbRole = document.getElementById('sb-role'); if (sbRole) sbRole.innerText = user.Role;
             const hInit = document.getElementById('header-initial'); if (hInit) hInit.innerText = user.Username.charAt(0).toUpperCase();
 
+            // 1. Deteksi Role Pengguna
             let roleStr = String(user.Role).toLowerCase();
             let isAdmin = roleStr.includes('admin') || roleStr.includes('owner');
-            
+            let isDriver = roleStr.includes('driver') || roleStr.includes('supir'); // <-- Deteksi Supir
+
             const adminMenus = document.getElementById('admin-menus'); 
             const selOut = document.getElementById('select-outlet'); 
             const repOut = document.getElementById('report-outlet-filter');
+            
+            // Tangkap elemen Menu Delivery
+            const navDelivery = document.getElementById('nav-delivery'); 
+            const navMobDelivery = document.getElementById('nav-mobile-delivery');
 
             const premiumCards = [
                 'setting-card-standby', 
@@ -970,6 +976,7 @@ const superApp = {
                 'setting-card-struk' 
             ];
 
+            // 2. Logika Buka/Tutup Akses Admin
             if (isAdmin) {
                 if (adminMenus) adminMenus.classList.remove('hidden'); 
                 if (selOut) selOut.classList.remove('hidden'); 
@@ -991,18 +998,34 @@ const superApp = {
                 premiumCards.forEach(id => { const el = document.getElementById(id); if (el) el.classList.add('hidden'); });
             }
 
+            // 3. Logika Buka/Tutup Akses Delivery (Hanya untuk Admin & Supir)
+            if (isAdmin || isDriver) {
+                if (navDelivery) navDelivery.classList.remove('hidden');
+                if (navMobDelivery) navMobDelivery.classList.remove('hidden');
+            } else {
+                if (navDelivery) navDelivery.classList.add('hidden');
+                if (navMobDelivery) navMobDelivery.classList.add('hidden');
+            }
+
+            // 4. Transisi Layar
             const ls = document.getElementById('login-screen'); if (ls) ls.classList.add('hidden');
             const sbar = document.getElementById('sidebar'); if (sbar) sbar.classList.remove('hidden');
             const mainApp = document.getElementById('main-app'); if (mainApp) mainApp.classList.remove('hidden');
 
-            this.updateNetworkUI(); this.syncOfflineQueue(); this.refreshData(); this.checkShiftStatus(); this.showToast(`Selamat datang, ${user.Username}!`);
+            this.updateNetworkUI(); 
+            this.syncOfflineQueue(); 
+            this.refreshData(); 
+            this.checkShiftStatus(); 
+            this.showToast(`Selamat datang, ${user.Username}!`);
             
             localStorage.setItem('aice_active_outlet', this.outlet);
             this.updateCFDGreeting(); 
             if (!this.cfdTimer) { this.cfdTimer = setInterval(() => { this.updateCFDGreeting(); }, 60000); }
             this.autoConnectPrinter();
+            
         } else { 
-            this.showToast('PIN Tidak Dikenali', 'error'); this.clearPin(); 
+            this.showToast('PIN Tidak Dikenali', 'error'); 
+            this.clearPin(); 
         }
         this.isProcessing = false;
     },
@@ -1598,6 +1621,7 @@ const superApp = {
             'outlet': 'text-teal-600',    
             'staf': 'text-amber-600',
             'master': 'text-emerald-600'
+            'delivery': 'text-blue-600'
         };
         const allColors = Object.values(colors);
 
@@ -1621,7 +1645,7 @@ const superApp = {
         const activeView = document.getElementById(`view-${targetViewId}`); 
         if (activeView) activeView.classList.remove('hidden');
 
-        const titles = { 'pos': 'POS', 'opname': 'Opname Fisik Stok', 'terima': 'Penerimaan Barang', 'audit': 'Audit Laporan', 'report': 'Laporan Terpadu', 'ai': 'Asisten AI', 'gudang': 'Gudang Pusat', 'master': 'Master Menu POS', 'outlet': 'Cabang & Harga', 'staf': 'Kinerja Karyawan' };
+        const titles = { 'pos': 'POS', 'opname': 'Opname Fisik Stok', 'terima': 'Penerimaan Barang', 'audit': 'Audit Laporan', 'report': 'Laporan Terpadu', 'ai': 'Asisten AI', 'gudang': 'Gudang Pusat', 'master': 'Master Menu POS', 'outlet': 'Cabang & Harga', 'staf': 'Kinerja Karyawan', 'delivery': 'Sistem Delivery & Rute' };
         const pageTitle = document.getElementById('page-title'); 
         if (pageTitle) pageTitle.innerText = titles[menu] || 'Aplikasi';
 
@@ -1641,6 +1665,7 @@ const superApp = {
             }
         });
 
+        if (menu === 'delivery' && typeof this.renderDelivery === 'function') this.renderDelivery();
         if (menu === 'pos' && !this.activeShiftId) this.checkShiftStatus();
         if (menu === 'report' && typeof this.renderReport === 'function') this.renderReport();
         if (menu === 'opname' && typeof this.renderOpname === 'function') {
@@ -2129,6 +2154,7 @@ const superApp = {
         let autoFillData = []; 
         let roleStr = this.currentUser ? String(this.currentUser.Role).toLowerCase() : '';
         let isAdmin = roleStr.includes('admin') || roleStr.includes('owner');
+        let isDriver = roleStr.includes('driver') || roleStr.includes('supir');
 
         [...(this.db.masterProduk || [])].sort((a, b) => String(a.Nama_Produk || '').localeCompare(String(b.Nama_Produk || ''))).forEach(m => {
             if (String(m.Kategori || '').toLowerCase() === 'bahan' || String(m.Kategori || '').toLowerCase() === 'pendukung') {
@@ -4535,6 +4561,141 @@ const superApp = {
             img.onerror = () => resolve(null);
             img.src = base64Image;
         });
+    },
+
+    // ==========================================
+    // MODULE: DELIVERY DRIVER
+    // ==========================================
+    toggleDeliveryTab: function(tab) {
+        const tabs = ['pending', 'otw', 'done'];
+        tabs.forEach(t => {
+            const content = document.getElementById(`deliv-content-${t}`);
+            const btn = document.getElementById(`tab-deliv-${t}`);
+            if(content) content.classList.add('hidden');
+            if(btn) {
+                btn.className = 'px-6 py-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 rounded-lg text-sm font-extrabold whitespace-nowrap transition border border-transparent flex items-center gap-2';
+            }
+        });
+
+        const activeContent = document.getElementById(`deliv-content-${tab}`);
+        const activeBtn = document.getElementById(`tab-deliv-${tab}`);
+        if(activeContent) activeContent.classList.remove('hidden');
+        if(activeBtn) {
+            let color = tab === 'pending' ? 'blue' : (tab === 'otw' ? 'orange' : 'emerald');
+            activeBtn.className = `px-6 py-3 bg-white text-${color}-600 rounded-lg text-sm font-extrabold shadow-sm whitespace-nowrap transition border border-slate-200 flex items-center gap-2`;
+        }
+    },
+
+    renderDelivery: function() {
+        if (!this.db || !this.db.mutasi) return;
+
+        const lblVehicle = document.getElementById('lbl-delivery-vehicle');
+        if (lblVehicle) lblVehicle.innerText = this.outlet || "Kendaraan Operasional";
+
+        let roleStr = this.currentUser ? String(this.currentUser.Role).toLowerCase() : '';
+        let isDriver = roleStr.includes('driver');
+        
+        let pendingHtml = ''; let otwHtml = ''; let doneHtml = '';
+        let countPending = 0; let countOtw = 0;
+
+        let today = new Date(); let pad = (n) => n < 10 ? '0' + n : n;
+        let todayStr = `${pad(today.getDate())}/${pad(today.getMonth() + 1)}/${today.getFullYear()}`;
+
+        // Urutkan mutasi dari yang paling baru
+        [...(this.db.mutasi || [])].reverse().forEach(m => {
+            let safeWaktu = String(m.Waktu || '');
+            let mutDateStr = this.cleanDateOnly(safeWaktu);
+            let mutTimeStr = this.cleanTimeOnly(safeWaktu);
+            
+            // Kita gunakan Status_Approval sebagai tracking state Delivery
+            // 'Disetujui' = Sudah Masuk Sistem Gudang Pusat tapi belum berangkat (Pending Load)
+            // 'OTW'       = Sedang dibawa mobil
+            // 'Selesai'   = Sudah sampai di Outlet
+            
+            let itemName = this.db.masterProduk.find(x => x.SKU === m.SKU)?.Nama_Produk || m.SKU;
+
+            if (m.Status_Approval === 'Disetujui' && m.Kasir === 'Pusat') {
+                countPending++;
+                pendingHtml += `<tr class="border-b border-slate-50 hover:bg-slate-50 transition">
+                    <td class="py-4 px-4 font-bold text-slate-800"><i class="fas fa-location-dot text-blue-500 mr-1.5"></i> ${m.Outlet_Tujuan}</td>
+                    <td class="py-4 px-4"><span class="font-black text-sm text-slate-700">${m.Qty}</span> <span class="text-xs text-slate-500">${itemName}</span></td>
+                    <td class="py-4 px-4 text-xs text-slate-400 font-bold">${mutDateStr} ${mutTimeStr}</td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="superApp.executeDelivAction('${m.ID_Mutasi}', 'muat')" class="bg-blue-50 hover:bg-blue-500 text-blue-600 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95"><i class="fas fa-truck-loading mr-1"></i> Muat & Brangkat</button>
+                    </td>
+                </tr>`;
+            } 
+            else if (m.Status_Approval === 'OTW') {
+                countOtw++;
+                otwHtml += `<tr class="border-b border-slate-50 hover:bg-orange-50/30 transition">
+                    <td class="py-4 px-4 font-bold text-orange-700"><i class="fas fa-map-pin text-orange-500 mr-1.5 animate-bounce"></i> ${m.Outlet_Tujuan}</td>
+                    <td class="py-4 px-4"><span class="font-black text-sm text-slate-800">${m.Qty}</span> <span class="text-xs text-slate-600">${itemName}</span></td>
+                    <td class="py-4 px-4 text-xs text-slate-400 font-bold">${mutDateStr} ${mutTimeStr}</td>
+                    <td class="py-4 px-4 text-center">
+                        <button onclick="superApp.executeDelivAction('${m.ID_Mutasi}', 'selesai')" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md shadow-orange-200 active:scale-95"><i class="fas fa-check-circle mr-1"></i> Selesaikan Pengiriman</button>
+                    </td>
+                </tr>`;
+            }
+            // Tampilkan log selesai khusus HARI INI saja agar tabel tidak kepenuhan
+            else if (m.Status_Approval === 'Selesai' && mutDateStr === todayStr) {
+                doneHtml += `<tr class="border-b border-slate-50 opacity-70">
+                    <td class="py-3 px-4 font-bold text-slate-600"><i class="fas fa-flag-checkered text-emerald-500 mr-1.5"></i> ${m.Outlet_Tujuan}</td>
+                    <td class="py-3 px-4"><span class="font-black text-sm text-slate-600">${m.Qty}</span> <span class="text-xs text-slate-500">${itemName}</span></td>
+                    <td class="py-3 px-4 text-xs text-slate-400 font-bold">${mutTimeStr}</td>
+                    <td class="py-3 px-4 text-center"><span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-[10px] font-black"><i class="fas fa-check mr-1"></i> Terkirim</span></td>
+                </tr>`;
+            }
+        });
+
+        // Update UI
+        const badgeDeliv = document.getElementById('badge-delivery');
+        if(badgeDeliv) {
+            if (countPending > 0) { badgeDeliv.innerText = countPending; badgeDeliv.classList.remove('hidden'); }
+            else { badgeDeliv.classList.add('hidden'); }
+        }
+
+        const countP = document.getElementById('count-deliv-pending'); if(countP) countP.innerText = countPending;
+        const countO = document.getElementById('count-deliv-otw'); if(countO) countO.innerText = countOtw;
+
+        const tbPend = document.getElementById('deliv-pending-tbody');
+        const tbOtw = document.getElementById('deliv-otw-tbody');
+        const tbDone = document.getElementById('deliv-done-tbody');
+
+        if(tbPend) tbPend.innerHTML = pendingHtml || `<tr><td colspan="4" class="text-center py-12">${this.getEmptyState('fa-box-open', 'Tugas Kosong', 'Tidak ada barang yang siap dimuat')}</td></tr>`;
+        if(tbOtw) tbOtw.innerHTML = otwHtml || `<tr><td colspan="4" class="text-center py-12">${this.getEmptyState('fa-truck-fast', 'Kendaraan Kosong', 'Tidak ada pengiriman yang sedang berjalan')}</td></tr>`;
+        if(tbDone) tbDone.innerHTML = doneHtml || `<tr><td colspan="4" class="text-center py-12"><div class="text-center text-slate-400 text-xs italic">Belum ada pengiriman yang diselesaikan hari ini.</div></td></tr>`;
+    },
+
+    executeDelivAction: async function(idMutasi, actionType) {
+        if(this.isProcessing) return;
+        
+        let confirmMsg = actionType === 'muat' 
+            ? "Pindahkan status barang ini ke 'Dalam Perjalanan'?" 
+            : "Konfirmasi barang sudah sampai dan diterima di Outlet?";
+
+        if(!confirm(confirmMsg)) return;
+
+        this.setLoading(true, "Memperbarui Status...");
+        const payload = { 
+            action: 'update_status_delivery', 
+            id_mutasi: idMutasi, 
+            status_baru: actionType === 'muat' ? 'OTW' : 'Selesai',
+            driver: this.currentUser.Username 
+        };
+
+        let res = await this.apiPost(payload);
+        if(res.status === 'sukses') {
+            this.showToast(actionType === 'muat' ? "Berhasil dimuat! Hati-hati di jalan." : "Pengiriman Selesai! Stok Outlet bertambah.");
+            if(!res.is_offline) { 
+                const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); 
+                this.db = await r.json(); 
+            }
+            this.refreshData(); // Ini otomatis me-render ulang halaman delivery karena dipanggil di switchMenu
+            if(document.getElementById('view-delivery') && !document.getElementById('view-delivery').classList.contains('hidden')) {
+                this.renderDelivery();
+            }
+        }
+        this.setLoading(false);
     },
     
     printReceipt: async function(id, outlet, total, tunai, kembali, items, status, explicitDate, antrian, isReprint = false, metodeBayar = 'TUNAI') {
