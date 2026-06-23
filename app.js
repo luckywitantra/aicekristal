@@ -1620,7 +1620,7 @@ const superApp = {
             'gudang': 'text-emerald-600', 
             'outlet': 'text-teal-600',    
             'staf': 'text-amber-600',
-            'master': 'text-emerald-600'
+            'master': 'text-emerald-600',
             'delivery': 'text-blue-600'
         };
         const allColors = Object.values(colors);
