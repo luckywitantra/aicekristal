@@ -3716,8 +3716,11 @@ const superApp = {
                      this.makeInput('Nama Bahan / Plastik', 'mst-nama', m.Nama_Produk||'') + 
                      `<div><label class="text-xs font-bold text-slate-500 block mb-1">Kategori</label><select id="frm-mst-kat" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 focus:border-brand-500 transition"><option value="Bahan" ${isBahanSel}>Bahan Baku Utama (Aice Kristal / Balok)</option><option value="Pendukung" ${isPendukungSel}>Barang Pendukung (Plastik, Kemasan, dll)</option></select></div>` +
                      `<input type="hidden" id="frm-mst-bahan" value=""><input type="hidden" id="frm-mst-img" value="">`;
-        this.buildForm(action==='edit'?"Edit Bahan/Barang":"Tambah Bahan/Barang", inputs, `superApp.executeCrud('Master_Produk', '${action==='edit'?sku:''}')`);
+        
+        // PERBAIKAN DI BARIS INI: Mengganti 'Master_Produk' menjadi 'MASTER_PRODUCT'
+        this.buildForm(action==='edit'?"Edit Bahan/Barang":"Tambah Bahan/Barang", inputs, `superApp.executeCrud('MASTER_PRODUCT', '${action==='edit'?sku:''}')`);
     },
+    
     openCrudMasterMenu: function(action = 'add', sku = '') {
         let m = action === 'edit' ? (this.db.masterProduk || []).find(x => x.SKU === sku) : {};
         let nextId = action === 'edit' ? sku : 'MNU-' + Math.floor(Math.random()*9000+1000);
@@ -3736,8 +3739,11 @@ const superApp = {
                      this.makeInput('Nama Menu Kasir', 'mst-nama', m.Nama_Produk||'') + 
                      `<input type="hidden" id="frm-mst-kat" value="${m.Kategori||'AICEKRISTAL'}">` +
                      `<div><label class="text-xs font-bold text-slate-500 block mb-1">Bahan yang Terpotong (BOM)</label><select id="frm-mst-bahan" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none text-slate-800 focus:border-brand-500 transition">${opt}</select></div>` + imgInput;
-        this.buildForm(action==='edit'?"Edit Menu Kasir":"Tambah Menu Kasir", inputs, `superApp.executeCrud('Master_Produk', '${action==='edit'?sku:''}')`);
+                     
+        // PERBAIKAN DI BARIS INI: Mengganti 'Master_Produk' menjadi 'MASTER_PRODUCT'
+        this.buildForm(action==='edit'?"Edit Menu Kasir":"Tambah Menu Kasir", inputs, `superApp.executeCrud('MASTER_PRODUCT', '${action==='edit'?sku:''}')`);
     },
+    
     openAddOutletProduct: function() {
         let opt = '';
         [...(this.db.masterProduk || [])].sort((a,b) => String(a.Nama_Produk||'').localeCompare(String(b.Nama_Produk||''))).forEach(p => { 
@@ -3860,11 +3866,14 @@ const superApp = {
         this.setLoading(false);
     },
 
-    openCrudOutlet: function(action, id='') {
+   openCrudOutlet: function(action, id='') {
         let o = action==='edit' ? (this.db.outlets || []).find(x=>x.ID_Outlet===id) : {};
         let inputs = this.makeInput('ID Outlet Unik', 'out-id', o.ID_Outlet||'', 'text', '', action==='edit') + this.makeInput('Nama Outlet', 'out-nama', o.Nama_Outlet||'') + this.makeInput('Alamat / Detail', 'out-alamat', o.Alamat||'');
-        this.buildForm(action==='edit'?"Edit Outlet":"Tambah Outlet Baru", inputs, `superApp.executeCrud('Daftar_Outlet', '${action==='edit'?o.ID_Outlet:''}')`);
+        
+        // PERBAIKAN DI BARIS INI: Mengganti 'Daftar_Outlet' menjadi 'MASTER_OUTLET'
+        this.buildForm(action==='edit'?"Edit Outlet":"Tambah Outlet Baru", inputs, `superApp.executeCrud('MASTER_OUTLET', '${action==='edit'?o.ID_Outlet:''}')`);
     },
+    
     // ==========================================
     // 🚀 ENGINE CRUD MASTER DATA (LENGKAP)
     // ==========================================
