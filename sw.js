@@ -2,7 +2,7 @@
 // AICE KRISTAL SUPER APP - SERVICE WORKER
 // ==========================================
 
-const CACHE_NAME = "aice-kristal-v10"; // Ubah versi ini jika Anda melakukan perubahan besar pada kodingan
+const CACHE_NAME = "aice-kristal-v11"; // Ubah versi ini jika Anda melakukan perubahan besar pada kodingan
 
 // Daftar file yang WAJIB disimpan di memori HP agar bisa dibuka saat tidak ada internet
 const urlsToCache = [
