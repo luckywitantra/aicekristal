@@ -194,6 +194,11 @@
             <span id="badge-opname" class="hidden ml-auto bg-amber-100 text-amber-600 px-2 py-0.5 rounded-md text-[10px] font-black shadow-sm border border-amber-200">0</span>
         </button>
 
+      <button onclick="superApp.switchMenu('produksi')" id="nav-produksi" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group shrink-0 hidden">
+            <i class="fas fa-industry w-6 text-slate-400 group-hover:text-orange-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
+            <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Produksi & Kemas</span>
+        </button>
+
       <button onclick="superApp.openTransferModalStaff()" class="nav-btn w-full flex items-center px-4 py-3.5 rounded-[1.25rem] text-slate-500 hover:bg-slate-50 transition-all duration-300 group shrink-0">
             <i class="fas fa-exchange-alt w-6 text-slate-400 group-hover:text-blue-500 group-hover:scale-110 transition-transform duration-300 text-lg text-center"></i>
             <span class="font-extrabold text-sm ml-4 group-hover:translate-x-1 transition-transform duration-300">Kirim / Transfer Stok</span>
@@ -411,6 +416,76 @@
                 </table>
             </div>
             <div class="md:hidden space-y-4 flex-1 overflow-y-auto min-h-0 custom-scroll content-start pb-28" id="opname-mobile-cards"></div>
+        </div>
+      </div>
+
+      <div id="view-produksi" class="app-view hidden flex-col lg:min-h-[80vh] min-h-max gap-4 pb-6">
+        <div class="bg-white p-4 lg:p-8 rounded-[2rem] shadow-sm border border-slate-100 text-slate-800 flex flex-col h-full min-h-0 relative overflow-hidden">
+            
+            <i class="fas fa-industry absolute top-0 right-0 -mt-6 -mr-8 text-9xl text-slate-50 opacity-70 pointer-events-none transition-transform duration-700 hover:scale-110 z-0"></i>
+
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-5 mb-5 gap-5 shrink-0 relative z-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-amber-500 rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg shadow-orange-200/50 shrink-0">
+                        <i class="fas fa-cubes"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-extrabold text-2xl text-slate-800 tracking-tight">Lapor Produksi</h3>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Konversi Es Curah & Plastik ke Produk Jadi</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto custom-scroll relative z-10">
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6 shadow-inner">
+                    <h4 class="font-black text-amber-700 text-sm mb-2 flex items-center gap-2"><i class="fas fa-info-circle"></i> Catatan Batch Produksi</h4>
+                    <p class="text-xs font-medium text-amber-600 leading-relaxed">
+                        Penginputan ini akan otomatis membentuk Nomor Batch. Stok plastik di Gudang Pusat akan <b>berkurang</b>, dan stok Es di Cold Storage akan <b>bertambah</b> setelah di-Setujui oleh Owner.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white border-2 border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.02)] relative">
+                        <div class="absolute -top-3 left-6 bg-slate-900 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm">1. Penggunaan Bahan</div>
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Pilih Plastik yang Dipakai</label>
+                                <select id="prod-bahan-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-slate-50 focus:bg-white focus:border-brand-500 transition text-slate-800"></select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Jumlah Plastik Terpakai (Lembar)</label>
+                                <input type="text" id="prod-bahan-qty" readonly onclick="osKeyboard.open('prod-bahan-qty', 'numeric')" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-black text-lg outline-none focus:border-brand-500 bg-white text-slate-800 transition cursor-pointer text-center text-red-500" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border-2 border-slate-100 rounded-[1.5rem] p-6 shadow-[0_4px_15px_rgba(0,0,0,0.02)] relative">
+                        <div class="absolute -top-3 left-6 bg-emerald-500 text-white px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm">2. Hasil Produksi Jadi</div>
+                        <div class="mt-4 space-y-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Pilih Produk Es yang Dihasilkan</label>
+                                <select id="prod-hasil-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-slate-50 focus:bg-white focus:border-emerald-500 transition text-slate-800"></select>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Jumlah Es Berhasil Dikemas (Pack)</label>
+                                <input type="text" id="prod-hasil-qty" readonly onclick="osKeyboard.open('prod-hasil-qty', 'numeric')" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-black text-lg outline-none focus:border-emerald-500 bg-white text-slate-800 transition cursor-pointer text-center text-emerald-600" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <label class="text-xs font-bold text-slate-500 block mb-1">Target Penyimpanan</label>
+                    <input type="text" value="Cold Storage (Otomatis menyesuaikan cabang ini)" disabled class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-slate-100 text-slate-500 cursor-not-allowed">
+                </div>
+
+                <div class="mt-8">
+                    <button onclick="superApp.submitProduksi()" class="w-full bg-gradient-to-r from-orange-400 to-amber-500 text-white py-4 rounded-xl font-extrabold text-sm md:text-base shadow-[0_8px_20px_rgba(245,158,11,0.3)] hover:from-orange-500 hover:to-amber-600 transition-all hover:-translate-y-1 active:translate-y-0 active:scale-95 flex justify-center items-center gap-2 tracking-wide uppercase">
+                        <i class="fas fa-check-double text-lg"></i> Lapor & Buat Batch Produksi
+                    </button>
+                </div>
+
+            </div>
         </div>
       </div>
 
