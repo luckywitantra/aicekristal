@@ -2610,6 +2610,66 @@ const superApp = {
         } else { this.setLoading(false); }
     },
 
+    // ==========================================
+    // FUNGSI TRANSFER KHUSUS STAF (TERKUNCI DI OUTLETNYA SENDIRI)
+    // ==========================================
+    openTransferModalStaff: function() {
+        let asalName = this.outlet; // Mengunci agar staf hanya bisa kirim dari ruangannya sendiri
+        
+        let outletOpts = ''; 
+        (this.db.outlets || []).forEach(o => { 
+            // Sembunyikan outletnya sendiri dari daftar tujuan
+            if (o.ID_Outlet !== this.outlet) {
+                outletOpts += `<option value="${o.ID_Outlet}">${o.Nama_Outlet}</option>`; 
+            }
+        });
+        
+        let opt = ''; 
+        [...(this.db.masterProduk || [])].sort((a, b) => String(a.Nama_Produk || '').localeCompare(String(b.Nama_Produk || ''))).forEach(m => {
+            let kat = String(m.Kategori || '').toLowerCase();
+            if (kat === 'bahan' || kat === 'pendukung' || kat === 'aicekristal' || kat === 'retail') { 
+                opt += `<option value="${m.SKU}">${m.Nama_Produk}</option>`; 
+            }
+        });
+
+        let inputs = `
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1">Toko Asal (Otomatis)</label>
+                <input type="text" value="${asalName}" disabled class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold bg-slate-100 text-slate-500">
+                <input type="hidden" id="frm-trf-out-asal" value="${this.outlet}">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1 mt-3">Barang yang Akan Dikirim</label>
+                <select id="frm-trf-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500" onchange="superApp.updateTransferStokInfo()">${opt}</select>
+            </div>
+            <div class="bg-blue-50 text-blue-600 p-4 rounded-2xl text-sm font-bold mb-2 hidden shadow-inner border border-blue-100 flex items-center justify-between" id="trf-stok-info-box">
+                <span><i class="fas fa-box-open mr-2"></i> Sisa Fisik di Ruangan Ini</span> 
+                <span id="trf-stok-info" class="text-xl font-black">0</span>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1">Tujuan Pengiriman</label>
+                <select id="frm-trf-out-tujuan" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500">
+                    <option value="">-- Pilih Tujuan (Gudang/Mobil) --</option>
+                    ${outletOpts}
+                </select>
+            </div>
+            ${this.makeInput('Jumlah Kirim (Pcs / Pack)', 'trf-qty', '', 'text', '', false, 'superApp.formatRupiahInput(this)')}
+        `;
+        
+        // Memakai mesin eksekusi transfer milik Owner agar proses karantina dan pemotongannya sama
+        this.buildForm("Kirim Stok Keluar", inputs, "superApp.executeTransferOwner()"); 
+        
+        setTimeout(() => {
+            let trfInput = document.getElementById('frm-trf-qty');
+            if (trfInput) { 
+                trfInput.setAttribute('readonly', 'readonly'); 
+                trfInput.classList.add('cursor-pointer'); 
+                trfInput.onclick = () => osKeyboard.open('frm-trf-qty', 'numeric'); 
+            }
+            this.updateTransferStokInfo();
+        }, 100);
+    },
+
     toggleReportTab: function(tab) {
         const tabs = ['trx', 'rekap', 'kas', 'selisih', 'bom'];
         tabs.forEach(t => {
