@@ -2613,17 +2613,23 @@ const superApp = {
     // ==========================================
     // FUNGSI TRANSFER KHUSUS STAF (TERKUNCI DI OUTLETNYA SENDIRI)
     // ==========================================
+   // ==========================================
+    // FUNGSI TRANSFER KHUSUS STAF (SOP KETAT)
+    // ==========================================
     openTransferModalStaff: function() {
-        let asalName = this.outlet; // Mengunci agar staf hanya bisa kirim dari ruangannya sendiri
+        let asalName = this.outlet; 
+        let isAicha = asalName.toLowerCase().includes('aicha'); // Aicha hanya punya Kulkas
         
-        let outletOpts = ''; 
+        let armadaOpts = ''; 
         (this.db.outlets || []).forEach(o => { 
-            // Sembunyikan outletnya sendiri dari daftar tujuan
-            if (o.ID_Outlet !== this.outlet) {
-                outletOpts += `<option value="${o.ID_Outlet}">${o.Nama_Outlet}</option>`; 
+            let tipe = String(o.Tipe || o.Alamat || '').toLowerCase();
+            let nm = String(o.Nama_Outlet).toLowerCase();
+            // Hanya deteksi Armada Delivery
+            if (tipe.includes('armada') || tipe.includes('mobil') || nm.includes('mobil') || nm.includes('armada')) {
+                armadaOpts += `<option value="${o.ID_Outlet}">🚚 ${o.Nama_Outlet}</option>`; 
             }
         });
-        
+
         let opt = ''; 
         [...(this.db.masterProduk || [])].sort((a, b) => String(a.Nama_Produk || '').localeCompare(String(b.Nama_Produk || ''))).forEach(m => {
             let kat = String(m.Kategori || '').toLowerCase();
@@ -2632,32 +2638,53 @@ const superApp = {
             }
         });
 
+        // 1. Pecah Lokasi Asal
+        let asalSelect = isAicha 
+            ? `<option value="${this.outlet}">Kulkas Penjualan</option>`
+            : `<option value="CS_${this.outlet}">Cold Storage</option><option value="${this.outlet}">Kulkas Penjualan</option>`;
+
+        // 2. Filter Lokasi Tujuan (Hanya Internal atau Armada)
+        let tujuanSelect = isAicha
+            ? armadaOpts
+            : `<optgroup label="Mutasi Internal Cabang">
+                   <option value="${this.outlet}">Kulkas Penjualan (Internal)</option>
+                   <option value="CS_${this.outlet}">Cold Storage (Internal)</option>
+               </optgroup>
+               <optgroup label="Kirim Keluar (Via Armada)">
+                   ${armadaOpts}
+               </optgroup>`;
+
         let inputs = `
             <div>
-                <label class="text-xs font-bold text-slate-500 block mb-1">Toko Asal (Otomatis)</label>
-                <input type="text" value="${asalName}" disabled class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold bg-slate-100 text-slate-500">
-                <input type="hidden" id="frm-trf-out-asal" value="${this.outlet}">
+                <label class="text-xs font-bold text-slate-500 block mb-1">Toko Asal</label>
+                <input type="text" value="${asalName}" disabled class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold bg-slate-100 text-slate-500 mb-2">
             </div>
             <div>
-                <label class="text-xs font-bold text-slate-500 block mb-1 mt-3">Barang yang Akan Dikirim</label>
-                <select id="frm-trf-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500" onchange="superApp.updateTransferStokInfo()">${opt}</select>
+                <label class="text-xs font-bold text-slate-500 block mb-1">Lokasi Stok Asal</label>
+                <select id="frm-trf-out-asal" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500" onchange="superApp.updateTransferStokInfoStaff()">
+                    ${asalSelect}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-slate-500 block mb-1 mt-3">Barang yang Akan Dipindah</label>
+                <select id="frm-trf-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500" onchange="superApp.updateTransferStokInfoStaff()">${opt}</select>
             </div>
             <div class="bg-blue-50 text-blue-600 p-4 rounded-2xl text-sm font-bold mb-2 hidden shadow-inner border border-blue-100 flex items-center justify-between" id="trf-stok-info-box">
-                <span><i class="fas fa-box-open mr-2"></i> Sisa Fisik di Ruangan Ini</span> 
+                <span><i class="fas fa-box-open mr-2"></i> Sisa Fisik di Lokasi Ini</span> 
                 <span id="trf-stok-info" class="text-xl font-black">0</span>
             </div>
             <div>
-                <label class="text-xs font-bold text-slate-500 block mb-1">Tujuan Pengiriman</label>
+                <label class="text-xs font-bold text-slate-500 block mb-1 mt-3">Tujuan Pengiriman</label>
                 <select id="frm-trf-out-tujuan" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500">
-                    <option value="">-- Pilih Tujuan (Gudang/Mobil) --</option>
-                    ${outletOpts}
+                    <option value="">-- Pilih Tujuan --</option>
+                    ${tujuanSelect}
                 </select>
+                <p class="text-[9px] text-slate-400 mt-1">SOP: Transfer ke cabang lain WAJIB melalui Armada Mobil.</p>
             </div>
             ${this.makeInput('Jumlah Kirim (Pcs / Pack)', 'trf-qty', '', 'text', '', false, 'superApp.formatRupiahInput(this)')}
         `;
         
-        // Memakai mesin eksekusi transfer milik Owner agar proses karantina dan pemotongannya sama
-        this.buildForm("Kirim Stok Keluar", inputs, "superApp.executeTransferOwner()"); 
+        this.buildForm("Kirim Stok Keluar", inputs, "superApp.executeTransferStaff()"); 
         
         setTimeout(() => {
             let trfInput = document.getElementById('frm-trf-qty');
@@ -2666,8 +2693,77 @@ const superApp = {
                 trfInput.classList.add('cursor-pointer'); 
                 trfInput.onclick = () => osKeyboard.open('frm-trf-qty', 'numeric'); 
             }
-            this.updateTransferStokInfo();
+            this.updateTransferStokInfoStaff();
         }, 100);
+    },
+
+    updateTransferStokInfoStaff: function() {
+        const asal = document.getElementById('frm-trf-out-asal'); 
+        const sku = document.getElementById('frm-trf-sku'); 
+        const info = document.getElementById('trf-stok-info'); 
+        const box = document.getElementById('trf-stok-info-box');
+        
+        if (asal && sku && info && box) {
+            let sData = (this.db.hargaStokOutlet || []).find(x => x.SKU === sku.value && x.ID_Outlet === asal.value);
+            let sisa = sData ? Number(sData.Stok_Toko) : 0; 
+            info.innerText = sisa; 
+            box.classList.remove('hidden');
+        }
+    },
+
+    executeTransferStaff: async function() {
+        if (this.isProcessing) return;
+        const elAsal = document.getElementById('frm-trf-out-asal'); 
+        const elSku = document.getElementById('frm-trf-sku'); 
+        const elQty = document.getElementById('frm-trf-qty'); 
+        const elTujuan = document.getElementById('frm-trf-out-tujuan');
+
+        if (!elSku || !elQty || !elTujuan || !elAsal) return;
+        
+        let sku = elSku.value; 
+        let qty = parseInt(this.getNumericValue(elQty.value), 10); 
+        let targetOutlet = elTujuan.value; 
+        let asalOutlet = elAsal.value;
+
+        if (asalOutlet === targetOutlet) return this.showToast("Lokasi asal dan tujuan tidak boleh sama!", "error");
+        if (!targetOutlet) return this.showToast("Pilih tujuan pengiriman!", "error");
+        if (!qty || parseInt(qty) <= 0) return this.showToast("Qty tidak valid", "error");
+
+        let sData = (this.db.hargaStokOutlet || []).find(x => x.SKU === sku && x.ID_Outlet === asalOutlet); 
+        let sisa = sData ? Number(sData.Stok_Toko) : 0;
+        
+        if (parseInt(qty) > sisa) return this.showToast(`Qty melebihi sisa fisik! (Sisa: ${sisa})`, "error");
+
+        let isInternal = targetOutlet.includes(this.outlet);
+        let msg = isInternal 
+            ? `Mutasi INTERNAL: Pindahkan ${qty} pack/pcs ke ${targetOutlet.includes('CS_') ? 'Cold Storage' : 'Kulkas Penjualan'}?`
+            : `Mutasi EKSTERNAL: Naikkan ${qty} pack/pcs ke Armada Delivery?`;
+
+        if (!confirm(msg)) return;
+
+        this.setLoading(true, "Memproses Transfer...");
+        const payload = { 
+            action: 'transfer_stok', 
+            sku: sku, 
+            outlet_asal: asalOutlet, 
+            outlet_tujuan: targetOutlet, 
+            qty: parseInt(qty), 
+            kasir: this.currentUser.Username
+        };
+        
+        let res = await this.apiPost(payload);
+
+        if (res.status === 'sukses') {
+            this.closeModal('modal-form'); 
+            this.showToast(isInternal ? "Mutasi Internal Menunggu Otorisasi Owner!" : "Barang diserahkan ke Armada (Menunggu Otorisasi)!");
+            if (!res.is_offline) { 
+                const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); 
+                this.db = await r.json(); 
+            }
+            this.refreshData();
+        } else { 
+            this.setLoading(false); 
+        }
     },
 
     toggleReportTab: function(tab) {
