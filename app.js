@@ -2549,9 +2549,16 @@ const superApp = {
     },
 
     openTransferModalOwner: function() {
-        let outletOpts = ''; (this.db.outlets || []).forEach(o => { outletOpts += `<option value="${o.ID_Outlet}">${o.Nama_Outlet}</option>`; });
-        let opt = ''; [...(this.db.masterProduk || [])].sort((a, b) => String(a.Nama_Produk || '').localeCompare(String(b.Nama_Produk || ''))).forEach(m => {
-            if (String(m.Kategori || '').toLowerCase() === 'bahan' || String(m.Kategori || '').toLowerCase() === 'pendukung') { opt += `<option value="${m.SKU}">${m.Nama_Produk}</option>`; }
+        let outletOpts = ''; 
+        (this.db.outlets || []).forEach(o => { outletOpts += `<option value="${o.ID_Outlet}">${o.Nama_Outlet}</option>`; });
+        
+        let opt = ''; 
+        [...(this.db.masterProduk || [])].sort((a, b) => String(a.Nama_Produk || '').localeCompare(String(b.Nama_Produk || ''))).forEach(m => {
+            // Membuka filter agar membaca semua kategori: Bahan, Pendukung, dan Produk Jadi (aicekristal/retail)
+            let kat = String(m.Kategori || '').toLowerCase();
+            if (kat === 'bahan' || kat === 'pendukung' || kat === 'aicekristal' || kat === 'retail') { 
+                opt += `<option value="${m.SKU}">${m.Nama_Produk}</option>`; 
+            }
         });
 
         let inputs = `
@@ -2559,7 +2566,7 @@ const superApp = {
             <div><label class="text-xs font-bold text-slate-500 block mb-1">Barang yang Ditransfer</label><select id="frm-trf-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500" onchange="superApp.updateTransferStokInfo()">${opt}</select></div>
             <div class="bg-blue-50 text-blue-600 p-4 rounded-2xl text-sm font-bold mb-2 hidden shadow-inner border border-blue-100 flex items-center justify-between" id="trf-stok-info-box"><span><i class="fas fa-box-open mr-2"></i> Stok Tersedia</span> <span id="trf-stok-info" class="text-xl font-black">0</span></div>
             <div><label class="text-xs font-bold text-slate-500 block mb-1">Toko Tujuan</label><select id="frm-trf-out-tujuan" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 transition focus:border-brand-500">${outletOpts}</select></div>
-            ${this.makeInput('Jumlah Kirim (Pcs)', 'trf-qty', '', 'text', '', false, 'superApp.formatRupiahInput(this)')}
+            ${this.makeInput('Jumlah Kirim (Pcs / Pack)', 'trf-qty', '', 'text', '', false, 'superApp.formatRupiahInput(this)')}
         `;
         this.buildForm("Transfer Stok Antar Toko", inputs, "superApp.executeTransferOwner()");
         setTimeout(() => {
@@ -2568,6 +2575,7 @@ const superApp = {
             this.updateTransferStokInfo();
         }, 100);
     },
+    
     updateTransferStokInfo: function() {
         const asal = document.getElementById('frm-trf-out-asal'); const sku = document.getElementById('frm-trf-sku'); const info = document.getElementById('trf-stok-info'); const box = document.getElementById('trf-stok-info-box');
         if (asal && sku && info && box) {
@@ -2575,6 +2583,7 @@ const superApp = {
             let sisa = sData ? Number(sData.Stok_Toko) : 0; info.innerText = sisa; box.classList.remove('hidden');
         }
     },
+    
     executeTransferOwner: async function() {
         if (this.isProcessing) return;
         const elAsal = document.getElementById('frm-trf-out-asal'); const elSku = document.getElementById('frm-trf-sku'); const elQty = document.getElementById('frm-trf-qty'); const elTujuan = document.getElementById('frm-trf-out-tujuan');
@@ -3820,6 +3829,7 @@ const superApp = {
         }
         this.setLoading(false);
     },
+    
     openDistribusiModal: function(prefillSku = '', prefillOutlet = '') {
         let opt = ''; 
         [...(this.db.stokGudang || [])].sort((a,b) => {
@@ -3828,40 +3838,76 @@ const superApp = {
             return String(nameA||'').localeCompare(String(nameB||''));
         }).forEach(g => {
             let m = (this.db.masterProduk || []).find(x => x.SKU === g.SKU);
-            if(m && (String(m.Kategori||'').toLowerCase()==='bahan' || String(m.Kategori||'').toLowerCase()==='pendukung')) {
-                let sel = (prefillSku === g.SKU) ? 'selected' : '';
-                opt += `<option value="${g.SKU}" ${sel}>${m.Nama_Produk} (Sisa Pusat: ${g.Stok_Pusat})</option>`; 
+            if(m) {
+                // [PERBAIKAN]: Membuka gembok filter agar membaca Bahan, Pendukung, dan Produk Jadi (Es Kristal/Retail)
+                let kat = String(m.Kategori || '').toLowerCase();
+                if (kat === 'bahan' || kat === 'pendukung' || kat === 'aicekristal' || kat === 'retail') {
+                    let sel = (prefillSku === g.SKU) ? 'selected' : '';
+                    opt += `<option value="${g.SKU}" ${sel}>${m.Nama_Produk} (Sisa Pusat: ${g.Stok_Pusat})</option>`; 
+                }
             }
         });
         
         let outletOpts = '';
+        // Memuat semua cabang termasuk armada mobil delivery yang terdaftar sebagai outlet
         (this.db.outlets || []).forEach(o => {
             let selOut = (prefillOutlet === o.ID_Outlet || this.outlet === o.ID_Outlet) ? 'selected' : '';
             outletOpts += `<option value="${o.ID_Outlet}" ${selOut}>${o.Nama_Outlet}</option>`;
         });
 
-        let inputs = `<div><label class="text-xs font-bold text-slate-500 block mb-1">Kirim Produk / Barang Pendukung</label><select id="frm-dist-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 focus:border-brand-500 transition">${opt}</select></div>` + 
-                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Tujuan Cabang</label><select id="frm-dist-out" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 focus:border-brand-500 transition">${outletOpts}</select></div>` +
-                     this.makeInput('Jumlah Kirim (Pcs)', 'dist-qty', '', 'text', '', false, 'superApp.formatRupiahInput(this)');
+        let inputs = `<div><label class="text-xs font-bold text-slate-500 block mb-1">Kirim Produk Es / Barang Pendukung</label><select id="frm-dist-sku" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 focus:border-brand-500 transition">${opt}</select></div>` + 
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Tujuan Cabang / Mobil Delivery</label><select id="frm-dist-out" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold outline-none text-sm bg-white text-slate-800 focus:border-brand-500 transition">${outletOpts}</select></div>` +
+                     this.makeInput('Jumlah Kirim (Pcs / Pack)', 'dist-qty', '', 'text', '', false, 'superApp.formatRupiahInput(this)');
+        
         this.buildForm("Kirim Stok Gudang -> Cabang", inputs, "superApp.executeDistribusi()");
+        
         setTimeout(() => {
             let trfInput = document.getElementById('frm-dist-qty');
-            if (trfInput) { trfInput.setAttribute('readonly', 'readonly'); trfInput.classList.add('cursor-pointer'); trfInput.onclick = () => osKeyboard.open('frm-dist-qty', 'numeric'); }
+            if (trfInput) { 
+                trfInput.setAttribute('readonly', 'readonly'); 
+                trfInput.classList.add('cursor-pointer'); 
+                trfInput.onclick = () => osKeyboard.open('frm-dist-qty', 'numeric'); 
+            }
         }, 100);
     },
+
     executeDistribusi: async function() {
         if(this.isProcessing) return;
-        const elSku = document.getElementById('frm-dist-sku'); const elQty = document.getElementById('frm-dist-qty'); const elOut = document.getElementById('frm-dist-out');
+        const elSku = document.getElementById('frm-dist-sku'); 
+        const elQty = document.getElementById('frm-dist-qty'); 
+        const elOut = document.getElementById('frm-dist-out');
+        
         if(!elSku || !elQty || !elOut) return;
-        let sku = elSku.value; let qty = this.getNumericValue(elQty.value); let targetOutlet = elOut.value;
-        if(qty === 0) return this.showToast("Qty wajib diisi", "error"); this.setLoading(true, "Distribusi Stok...");
-        const payload = { action: 'distribusi', sku: sku, outlet: targetOutlet, qty: qty };
+        let sku = elSku.value; 
+        let qty = this.getNumericValue(elQty.value); 
+        let targetOutlet = elOut.value;
+        
+        if(qty === 0) return this.showToast("Qty wajib diisi", "error"); 
+        
+        // Meminta konfirmasi sebelum memotong stok gudang pusat
+        if(!confirm(`Kirim stok ini ke ${targetOutlet}? Stok Gudang Pusat akan langsung terpotong.`)) return;
+
+        this.setLoading(true, "Distribusi Stok...");
+        const payload = { 
+            action: 'distribusi', 
+            sku: sku, 
+            outlet: targetOutlet, 
+            qty: qty,
+            kasir: this.currentUser.Username // Menambahkan jejak siapa yang melakukan distribusi
+        };
+        
         let res = await this.apiPost(payload);
         
         if(res.status === 'sukses') {
             this.closeModal('modal-form'); 
-            if(!res.is_offline) { const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); this.db = await r.json(); }
+            this.showToast("Distribusi Berhasil! Stok dikirim.");
+            if(!res.is_offline) { 
+                const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); 
+                this.db = await r.json(); 
+            }
             this.refreshData(); 
+        } else {
+            this.showToast(res.pesan || "Gagal melakukan distribusi", "error");
         }
         this.setLoading(false);
     },
