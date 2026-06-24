@@ -813,6 +813,35 @@ const superApp = {
             const totEl = document.getElementById('cfd-total'); if (totEl) totEl.innerText = `Rp ${Number(data.total || 0).toLocaleString('id-ID')}`;
         }
     },
+
+    updateCFDGreeting: function() {
+        if (this.outlet) {
+            localStorage.setItem('aice_active_outlet', this.outlet);
+        }
+        let namaOutlet = this.outlet || localStorage.getItem('aice_active_outlet') || "Aice Kristal";
+
+        const hour = new Date().getHours();
+        let ucapanWaktu = "Selamat Malam!"; 
+        if (hour >= 5 && hour < 11) ucapanWaktu = "Selamat Pagi!";
+        else if (hour >= 11 && hour < 15) ucapanWaktu = "Selamat Siang!";
+        else if (hour >= 15 && hour < 18) ucapanWaktu = "Selamat Sore!";
+
+        const greetTimeEl = document.getElementById('cfd-greeting-time');
+        const greetOutletEl = document.getElementById('cfd-greeting-outlet');
+        if (greetTimeEl) greetTimeEl.innerText = ucapanWaktu;
+        if (greetOutletEl) greetOutletEl.innerText = `Selamat datang di ${namaOutlet}, silakan pesan di kasir`;
+
+        if (this.cfdWindow && !this.cfdWindow.closed) {
+            try {
+                const cfdTimeEl = this.cfdWindow.document.getElementById('cfd-greeting-time');
+                const cfdOutletEl = this.cfdWindow.document.getElementById('cfd-greeting-outlet');
+                if (cfdTimeEl) cfdTimeEl.innerText = ucapanWaktu;
+                if (cfdOutletEl) cfdOutletEl.innerText = `Selamat datang di ${namaOutlet}, silakan pesan di kasir`;
+            } catch (e) {
+                console.log("Menunggu layar CFD siap...");
+            }
+        }
+    },
     
     init: async function() {
         if ('serviceWorker' in navigator) {
