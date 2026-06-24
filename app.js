@@ -1603,6 +1603,8 @@ const superApp = {
         if (typeof this.renderTerimaBarang === 'function') this.renderTerimaBarang();
         if (typeof this.generateAIReport === 'function') this.generateAIReport();
         if (typeof this.updatePendingNotifications === 'function') this.updatePendingNotifications();
+        if (typeof this.renderUserCrud === 'function') this.renderUserCrud();
+        if (typeof this.renderArmadaCrud === 'function') this.renderArmadaCrud();
     },
     
     changeOutlet: function(val) { this.outlet = val; this.cart = []; this.renderCart(); this.checkShiftStatus(); this.refreshData(); },
@@ -3834,32 +3836,175 @@ const superApp = {
         let inputs = this.makeInput('ID Outlet Unik', 'out-id', o.ID_Outlet||'', 'text', '', action==='edit') + this.makeInput('Nama Outlet', 'out-nama', o.Nama_Outlet||'') + this.makeInput('Alamat / Detail', 'out-alamat', o.Alamat||'');
         this.buildForm(action==='edit'?"Edit Outlet":"Tambah Outlet Baru", inputs, `superApp.executeCrud('Daftar_Outlet', '${action==='edit'?o.ID_Outlet:''}')`);
     },
+    // ==========================================
+    // 🚀 ENGINE CRUD MASTER DATA (LENGKAP)
+    // ==========================================
+
+    // --- 1. CRUD USER (KARYAWAN) ---
+    renderUserCrud: function() {
+        const tbody = document.getElementById('crud-user-tbody'); if(!tbody) return;
+        let html = '';
+        (this.db.users || []).forEach(u => {
+            let badgeRole = u.Role.toLowerCase().includes('admin') || u.Role.toLowerCase().includes('owner') ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500';
+            let statColor = u.Status === 'Aktif' ? 'text-emerald-500' : 'text-red-500';
+            html += `
+            <tr class="hover:bg-white transition-colors group">
+                <td class="py-3 px-5">
+                    <div class="font-extrabold text-slate-800">${u.Username}</div>
+                    <div class="inline-block px-2 py-0.5 mt-1 rounded text-[9px] font-black uppercase tracking-widest border ${badgeRole}">${u.Role}</div>
+                </td>
+                <td class="py-3 px-5 text-center font-mono font-black text-slate-400 group-hover:text-slate-800 transition-colors cursor-pointer" title="Sembunyikan PIN (Hover untuk melihat)">****${String(u.PIN).slice(-1)}</td>
+                <td class="py-3 px-5 text-center font-bold text-brand-600">${u.Outlet}</td>
+                <td class="py-3 px-5 text-center font-black ${statColor}">${u.Status}</td>
+                <td class="py-3 px-5 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="superApp.openCrudUser('edit', '${u.ID_User}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-90"><i class="fas fa-edit"></i></button>
+                        <button onclick="superApp.deleteCrud('MASTER_USER', '${u.ID_User}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all active:scale-90"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html || `<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada data user.</td></tr>`;
+    },
+
+    openCrudUser: function(action, id='') {
+        let u = action==='edit' ? (this.db.users || []).find(x=>x.ID_User===id) : {};
+        let nextId = action==='edit' ? id : 'USR-' + Math.floor(Math.random()*90000+10000);
+        
+        let outOpts = '<option value="Pusat">Kantor Pusat</option>';
+        (this.db.outlets || []).forEach(o => outOpts += `<option value="${o.ID_Outlet}" ${u.Outlet===o.ID_Outlet?'selected':''}>Cabang ${o.Nama_Outlet}</option>`);
+
+        let roleOpts = `
+            <option value="Staf" ${u.Role==='Staf'?'selected':''}>Staf Kasir Biasa</option>
+            <option value="Senior" ${u.Role==='Senior'?'selected':''}>Staf Senior</option>
+            <option value="Driver" ${u.Role==='Driver'?'selected':''}>Supir / Driver Delivery</option>
+            <option value="Admin" ${u.Role==='Admin'?'selected':''}>Admin Pengawas</option>
+            <option value="Owner" ${u.Role==='Owner'?'selected':''}>Super Admin / Owner</option>
+        `;
+
+        let statOpts = `<option value="Aktif" ${u.Status==='Aktif'?'selected':''}>Aktif</option><option value="Nonaktif" ${u.Status==='Nonaktif'?'selected':''}>Nonaktifkan (Blokir)</option>`;
+
+        let inputs = `<input type="hidden" id="frm-usr-id" value="${nextId}">` + 
+                     this.makeInput('Nama Lengkap (Username)', 'usr-nama', u.Username||'') + 
+                     this.makeInput('PIN Login (Maks 6 Angka)', 'usr-pin', u.PIN||'', 'number', '', false, 'superApp.formatRupiahInput(this)') + 
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Role / Jabatan</label><select id="frm-usr-role" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none focus:border-brand-500">${roleOpts}</select></div>` +
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Penempatan Utama</label><select id="frm-usr-outlet" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none focus:border-brand-500">${outOpts}</select></div>` +
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Status Akun</label><select id="frm-usr-status" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none focus:border-brand-500">${statOpts}</select></div>`;
+        
+        this.buildForm(action==='edit'?"Edit Karyawan":"Registrasi Karyawan Baru", inputs, `superApp.executeCrud('MASTER_USER', '${action==='edit'?id:''}')`);
+    },
+
+    // --- 2. CRUD ARMADA KENDARAAN ---
+    renderArmadaCrud: function() {
+        const tbody = document.getElementById('crud-armada-tbody'); if(!tbody) return;
+        let html = '';
+        (this.db.kendaraan || []).forEach(a => {
+            let statColor = a.Status === 'Tersedia' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700';
+            html += `
+            <tr class="hover:bg-white transition-colors group">
+                <td class="py-3 px-4">
+                    <div class="font-extrabold text-slate-800 text-base">${a.Plat_Nomor}</div>
+                    <div class="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-widest">${a.Jenis}</div>
+                </td>
+                <td class="py-3 px-4 text-center font-bold text-slate-600"><i class="fas fa-id-card-clip mr-1 opacity-50"></i> ${a.Driver || 'Belum Diatur'}</td>
+                <td class="py-3 px-4 text-center"><span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${statColor}">${a.Status}</span></td>
+                <td class="py-3 px-4 text-center">
+                    <div class="flex items-center justify-center gap-2">
+                        <button onclick="superApp.openCrudArmada('edit', '${a.ID_Kendaraan}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all active:scale-90"><i class="fas fa-edit"></i></button>
+                        <button onclick="superApp.deleteCrud('MASTER_VEHICLE', '${a.ID_Kendaraan}')" class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition-all active:scale-90"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+        tbody.innerHTML = html || `<tr><td colspan="4" class="text-center py-6 text-slate-400">Belum ada armada didaftarkan.</td></tr>`;
+    },
+
+    openCrudArmada: function(action, id='') {
+        let a = action==='edit' ? (this.db.kendaraan || []).find(x=>x.ID_Kendaraan===id) : {};
+        let nextId = action==='edit' ? id : 'MOB-' + Math.floor(Math.random()*90000+10000);
+        
+        let driverOpts = '<option value="-">-- Pilih Supir Penanggung Jawab --</option>';
+        (this.db.users || []).forEach(u => {
+            if(u.Role.toLowerCase().includes('driver') || u.Role.toLowerCase().includes('supir')) {
+                driverOpts += `<option value="${u.Username}" ${a.Driver===u.Username?'selected':''}>${u.Username}</option>`;
+            }
+        });
+
+        let jenisOpts = `<option value="Mobil Box" ${a.Jenis==='Mobil Box'?'selected':''}>Mobil Box Besar</option><option value="Pick Up" ${a.Jenis==='Pick Up'?'selected':''}>Pick Up Bak</option><option value="Motor Roda 3" ${a.Jenis==='Motor Roda 3'?'selected':''}>Motor Roda 3</option>`;
+        let statOpts = `<option value="Tersedia" ${a.Status==='Tersedia'?'selected':''}>Tersedia (Siap Kirim)</option><option value="Maintenance" ${a.Status==='Maintenance'?'selected':''}>Maintenance (Rusak/Service)</option>`;
+
+        let inputs = `<input type="hidden" id="frm-arm-id" value="${nextId}">` + 
+                     this.makeInput('Plat Nomor (Cth: KT 1234 XY)', 'arm-plat', a.Plat_Nomor||'') + 
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Jenis Kendaraan</label><select id="frm-arm-jenis" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none focus:border-brand-500">${jenisOpts}</select></div>` +
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Supir Utama</label><select id="frm-arm-driver" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none focus:border-brand-500">${driverOpts}</select><p class="text-[9px] text-slate-400 mt-1">Hanya staf dengan role 'Driver' yang muncul di sini.</p></div>` +
+                     `<div><label class="text-xs font-bold text-slate-500 block mb-1">Kondisi</label><select id="frm-arm-status" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 font-bold text-sm bg-white outline-none focus:border-brand-500">${statOpts}</select></div>`;
+        
+        this.buildForm(action==='edit'?"Edit Armada":"Registrasi Armada Baru", inputs, `superApp.executeCrud('MASTER_VEHICLE', '${action==='edit'?id:''}')`);
+    },
+
+    // --- 3. FUNGSI EXECUTE & DELETE UNIVERSAL ---
     executeCrud: async function(sheet, oldId) {
         if(this.isProcessing) return;
         let row = [], idVal = '';
-        if(sheet === 'Master_Produk') { 
+        let targetSheet = sheet; // Untuk penyesuaian nama tab di Google Sheets
+
+        if(sheet === 'MASTER_PRODUCT') { 
             const fSku = document.getElementById('frm-mst-sku'); const fNama = document.getElementById('frm-mst-nama'); const fKat = document.getElementById('frm-mst-kat'); const fBahan = document.getElementById('frm-mst-bahan'); const fImg = document.getElementById('frm-mst-img');
             if(!fSku || !fNama) return; idVal = fSku.value; row = [idVal, fNama.value, fKat.value, fBahan.value, fImg.value]; 
-        } else if(sheet === 'Daftar_Outlet') { 
+        } 
+        else if(sheet === 'MASTER_OUTLET') { 
             const fId = document.getElementById('frm-out-id'); const fNama = document.getElementById('frm-out-nama'); const fAlamat = document.getElementById('frm-out-alamat');
             if(!fId || !fNama) return; idVal = fId.value; row = [idVal, fNama.value, fAlamat.value, 'Aktif']; 
         }
-        if(!idVal) return this.showToast("Gagal menyimpan form", "error"); this.setLoading(true, "Menyimpan...");
-        const payload = { action: 'save', sheetName: sheet, id: oldId || idVal, rowData: row };
+        else if(sheet === 'MASTER_USER') {
+            const fId = document.getElementById('frm-usr-id'); const fNama = document.getElementById('frm-usr-nama'); const fPin = document.getElementById('frm-usr-pin'); const fRole = document.getElementById('frm-usr-role'); const fOutlet = document.getElementById('frm-usr-outlet'); const fStatus = document.getElementById('frm-usr-status');
+            if(!fId || !fNama) return; idVal = fId.value; 
+            let cleanPin = this.getNumericValue(fPin.value); // Bersihkan format Rupiah jika ada
+            row = [idVal, fNama.value, cleanPin, fRole.value, fOutlet.value, fStatus.value];
+        }
+        else if(sheet === 'MASTER_VEHICLE') {
+            const fId = document.getElementById('frm-arm-id'); const fPlat = document.getElementById('frm-arm-plat'); const fJenis = document.getElementById('frm-arm-jenis'); const fDriver = document.getElementById('frm-arm-driver'); const fStatus = document.getElementById('frm-arm-status');
+            if(!fId || !fPlat) return; idVal = fId.value; row = [idVal, fPlat.value, fJenis.value, fDriver.value, fStatus.value];
+        }
+
+        if(!idVal) return this.showToast("Gagal membaca ID Form", "error"); 
+        
+        this.setLoading(true, "Menyimpan ke Database...");
+        const payload = { action: 'save', sheetName: targetSheet, id: oldId || idVal, rowData: row };
+        
         let res = await this.apiPost(payload);
         if(res.status === 'sukses') {
             this.closeModal('modal-form'); 
-            if(!res.is_offline) { const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); this.db = await r.json(); }
+            if(!res.is_offline) { 
+                const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); 
+                this.db = await r.json(); 
+            }
             this.refreshData(); 
+            this.showToast("Data Berhasil Disimpan!", "success");
+        } else {
+            this.showToast("Gagal menyimpan data", "error");
         }
         this.setLoading(false);
     },
+
     deleteCrud: async function(sheet, id) {
         if(this.isProcessing) return;
-        if(!confirm(`Yakin hapus data ini?`)) return; this.setLoading(true, "Menghapus...");
+        if(!confirm(`PERINGATAN!\nYakin ingin MENGHAPUS data ini secara permanen dari sistem?`)) return; 
+        
+        this.setLoading(true, "Menghapus...");
         const payload = { action: 'delete', sheetName: sheet, id: id };
         let res = await this.apiPost(payload);
-        if(!res.is_offline) { const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); this.db = await r.json(); this.refreshData(); }
+        
+        if(res.status === 'sukses') {
+            if(!res.is_offline) { 
+                const r = await fetch(API_URL + "?ts=" + new Date().getTime(), { redirect: 'follow' }); 
+                this.db = await r.json(); 
+                this.refreshData(); 
+            }
+            this.showToast("Data Terhapus", "success");
+        } else {
+            this.showToast("Gagal menghapus", "error");
+        }
         this.setLoading(false);
     },
 
